@@ -48,6 +48,8 @@ void main() {
 	
 	// gamma corection
 	color.rgb = pow(color.rgb, vec3(SRGB_GAMMA));
+	// lightmap scaling
+	lightmap.rg = (lightmap.rg - (1.0 / 32.0)) * 32.0 / 30.0;
 
 	// vector to sunlight
 	vec3 shadowLightVector = txLinear(
@@ -65,11 +67,7 @@ void main() {
 
 	vec3 shadowScreenPos = shadowViewToScreen(shadowViewPos);
 	
-	float shadow = pcfShadowTexture(shadowtex0, shadowScreenPos);
-
-	// test
-	// color.rgb = vec3(texture(shadowtex0, shadowScreenPos.xy).r);
-	// return;
+	float shadow = pcfShadowTexture(shadowtex1, shadowScreenPos);
 
 	// LIGHTING
 	// ===============================================
@@ -88,7 +86,7 @@ void main() {
 	vec3 blockTotal = blockLightColor * lightmap.r;
 
 	// combine lighting onto colour
-	color.rgb *= (skyTotal + blockTotal);
+	color.rgb = (skyTotal + blockTotal);
 	
 	// TONEMAPPING
 	// ===============================================

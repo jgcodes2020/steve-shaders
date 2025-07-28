@@ -21,7 +21,7 @@ vec3 screenToView(vec2 texcoord, float depth) {
 
 vec3 shadowViewToScreen(vec3 shadowViewPos) {
 	vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
-	shadowClipPos.z -= 0.001; // shadow bias
+	shadowClipPos.z -= 0.005; // shadow bias
 	shadowClipPos.xyz = distortShadowClipPos(shadowClipPos.xyz);
 	vec3 shadowNdcPos = shadowClipPos.xyz / shadowClipPos.w;
 	vec3 shadowScreenPos = shadowNdcPos * 0.5 + 0.5;
