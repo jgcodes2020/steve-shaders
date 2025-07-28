@@ -1,12 +1,15 @@
 #version 410 compatibility
 
+
+
 // ===============================================
 // OPAQUE LIGHTING PASS
 // ===============================================
 
-uniform sampler2D colortex0; // colour
+uniform sampler2D colortex0; // colour (base)
 uniform sampler2D colortex1; // light info
 uniform sampler2D colortex2; // normal info
+uniform sampler2D colortex8; // transparent colour
 
 uniform sampler2D depthtex0; // depth
 uniform sampler2D depthtex1; // depth (opaque)
@@ -41,8 +44,12 @@ void main() {
 	vec2 lightmap = texture(colortex1, texcoord).rg;
 	vec3 normal = colorToNormal(texture(colortex2, texcoord));
 	float depth = texture(depthtex0, texcoord).r;
+	float opaqueDepth = texture(depthtex1, texcoord).r;
 
 	if (depth == 1.0) {
+		return;
+	}
+	if (normal == vec3(0.0)) {
 		return;
 	}
 	
