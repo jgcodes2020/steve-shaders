@@ -1,3 +1,6 @@
+#ifndef UTIL_GLSL_INCLUDED
+#define UTIL_GLSL_INCLUDED
+
 // TRANSFORMATION
 // ===============================================
 
@@ -56,3 +59,5 @@ const vec4 COL_NORMAL_NONE = vec4(vec3(0.5), 1.0);
 
 // Lighting: do not apply shadowing to this object.
 const uint LTG_NO_SHADOW = (1u << 0);
+
+#endif

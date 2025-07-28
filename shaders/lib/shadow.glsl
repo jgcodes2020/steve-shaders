@@ -1,3 +1,7 @@
+#ifndef SHADOW_GLSL_INCLUDED
+#define SHADOW_GLSL_INCLUDED
+
+// Perform shadow distortion to improve shadows near to the player.
 vec3 distortShadowClipPos(vec3 shadowClipPos){
   // distort geometry by distance from player
   float distortionFactor = length(shadowClipPos.xy);
@@ -10,8 +14,21 @@ vec3 distortShadowClipPos(vec3 shadowClipPos){
   return shadowClipPos;
 }
 
-const int shadowMapResolution = 2048;
+vec3 screenToView(vec2 texcoord, float depth) {
+	vec3 ndcPos = vec3(texcoord, depth) * 2.0 - 1.0;
+	return txProjective(gbufferProjectionInverse, ndcPos);
+}
 
-const bool shadowtex0Nearest = true;
-const bool shadowtex1Nearest = true;
-const bool shadowcolor0Nearest = true;
+vec3 shadowViewToScreen(vec3 shadowViewPos) {
+	vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
+	shadowClipPos.z -= 0.001; // shadow bias
+	shadowClipPos.xyz = distortShadowClipPos(shadowClipPos.xyz);
+	vec3 shadowNdcPos = shadowClipPos.xyz / shadowClipPos.w;
+	vec3 shadowScreenPos = shadowNdcPos * 0.5 + 0.5;
+	return shadowScreenPos;
+}
+
+const int shadowMapResolution = 2048;
+const bool shadowHardwareFiltering = true;
+
+#endif
