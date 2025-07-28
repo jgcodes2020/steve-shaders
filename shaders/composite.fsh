@@ -19,6 +19,7 @@ uniform sampler2D depthtex1; // depth (opaque)
 
 uniform sampler2DShadow shadowtex0; // shadow distance
 uniform sampler2DShadow shadowtex1; // shadow distance (opaque)
+uniform sampler2D shadowcolor0; // shadow color
 
 uniform vec3 shadowLightPosition; // sun/moon angle
 uniform vec3 sunPosition; // sun angle
@@ -69,7 +70,7 @@ void main() {
 	// ===============================================
 
 	vec3 shadowPos = screenToShadowScreen(texcoord, depth);
-	float shadow = pcfShadowTexture(shadowtex1, shadowPos);
+	float shadow = computeShadow(shadowPos);
 
 	// LIGHTING CONSTANTS
 	// ===============================================
@@ -82,8 +83,6 @@ void main() {
 
 	// OPAQUE LIGHTING
 	// ===============================================
-
-	// diffuse sunlight + ambient (skylights)
 	if (depth < 1.0) {
 		vec3 skyLight = skyLightColor * clamp(dot(shadowLightVector, normal), 0.0, 1.0);
 		vec3 skyTotal = skyAmbientColor * lightmap.g + skyLight * shadow;

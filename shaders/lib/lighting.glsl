@@ -51,16 +51,39 @@ vec3 screenToShadowScreen(vec2 texcoord, float depth) {
 	vec3 shadowViewPos = txAffine(shadowModelView, feetPlayerPos);
   return shadowViewToScreen(shadowViewPos);
 }
+/*
+// This is the reference hard-shadow implementation.
+float computeShadow(vec3 shadowScreenPos) {
+	float test = texture(shadowtex1, shadowScreenPos);
+	float tlTest = texture(shadowtex0, shadowScreenPos);
 
-float pcfShadowTexture(sampler2DShadow shadowtex, vec3 shadowScreenPos) {
-  vec4 accum = vec4(0.0);
+	if (test == 0.0) {
+		return 0.0;
+	}
+	if (tlTest == 1.0) {
+		return 1.0;
+	}
+	return 1.0 - texture(shadowcolor0, shadowScreenPos.xy).a;
+}
+*/
 
-  accum += textureGatherOffset(shadowtex, shadowScreenPos.xy, shadowScreenPos.z, ivec2(-1, -1));
-  accum += textureGatherOffset(shadowtex, shadowScreenPos.xy, shadowScreenPos.z, ivec2(-1, +1));
-  accum += textureGatherOffset(shadowtex, shadowScreenPos.xy, shadowScreenPos.z, ivec2(+1, -1));
-  accum += textureGatherOffset(shadowtex, shadowScreenPos.xy, shadowScreenPos.z, ivec2(+1, +1));
+float computeShadow(vec3 shadowScreenPos) {
+	vec4 accum = vec4(0.0);
 
-  return dot(accum, vec4(1.0 / 16.0));
+	#define GATHER_OFFSET(x, y) \
+		do { \
+			vec4 test = textureGatherOffset(shadowtex1, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
+			vec4 tlTest = textureGatherOffset(shadowtex0, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
+			vec4 tlAlpha = textureGatherOffset(shadowcolor0, shadowScreenPos.xy, ivec2(x, y), 3); \
+			accum += max(tlTest, max(test - tlAlpha, vec4(0.0))); \
+		} while (false)
+
+	GATHER_OFFSET(-1, -1);
+	GATHER_OFFSET(-1, +1);
+	GATHER_OFFSET(+1, -1);
+	GATHER_OFFSET(+1, +1);
+
+	return dot(accum, vec4(1.0 / 16.0));
 }
 
 #endif
