@@ -1,17 +1,18 @@
 #version 410 compatibility
 
-/*
-const int colortex8Format = RGBA8;
-*/
+
 
 // ===============================================
 // OPAQUE LIGHTING PASS
 // ===============================================
 
-uniform sampler2D colortex0; // colour (base)
+uniform sampler2D colortex0; // colour
 uniform sampler2D colortex1; // light info
 uniform sampler2D colortex2; // normal info
-uniform sampler2D colortex8; // colour (translucent)
+
+uniform sampler2D colortex4; // colour
+uniform sampler2D colortex5; // light info
+uniform sampler2D colortex6; // normal info
 
 uniform sampler2D depthtex0; // depth
 uniform sampler2D depthtex1; // depth (opaque)
@@ -40,26 +41,23 @@ layout(location = 0) out vec4 color;
 #include "/lib/shadow.glsl"
 
 void main() {
-	color = texture(colortex0, texcoord);
-
 	// fetch other values
+	color = texture(colortex0, texcoord);
 	vec2 lightmap = texture(colortex1, texcoord).rg;
 	vec3 normal = colorToNormal(texture(colortex2, texcoord));
-	float depth = texture(depthtex0, texcoord).r;
-	float opaqueDepth = texture(depthtex1, texcoord).r;
-	vec4 tlColor = texture(colortex8, texcoord);
+	float depth = texture(depthtex1, texcoord).r;
 
-	if (depth == 1.0) {
-		return;
-	}
-	if (normal == vec3(0.0)) {
-		return;
-	}
+	vec4 tlColor = texture(colortex4, texcoord);
+	vec2 tlLightmap = texture(colortex5, texcoord).rg;
+	vec3 tlNormal = colorToNormal(texture(colortex6, texcoord));
+	float tlDepth = texture(depthtex0, texcoord).r;
 	
 	// gamma corection
 	color.rgb = pow(color.rgb, vec3(SRGB_GAMMA));
 	lightmap.rg = pow(lightmap.rg, vec2(SRGB_GAMMA));
+
 	tlColor.rgb = pow(tlColor.rgb, vec3(SRGB_GAMMA));
+	tlLightmap.rg = pow(tlLightmap.rg, vec2(SRGB_GAMMA));
 
 	// vector to sunlight
 	vec3 shadowLightVector = txLinear(
@@ -67,19 +65,13 @@ void main() {
 		normalize(shadowLightPosition)
 	);
 
-	// SHADOW-SPACE TRANSFORMATION
+	// SHADOW-SPACE CALCULATIONS
 	// ===============================================
 
-	// vec3 viewPos = screenToView(texcoord, depth);
+	vec3 shadowPos = screenToShadowScreen(texcoord, depth);
+	float shadow = pcfShadowTexture(shadowtex1, shadowPos);
 
-	// vec3 feetPlayerPos = txAffine(gbufferModelViewInverse, viewPos);
-	// vec3 shadowViewPos = txAffine(shadowModelView, feetPlayerPos);
-
-	// vec3 shadowScreenPos = shadowViewToScreen(shadowViewPos);
-	
-	// float shadow = pcfShadowTexture(shadowtex1, shadowScreenPos);
-
-	// LIGHTING
+	// LIGHTING CONSTANTS
 	// ===============================================
 
 	float cosSunToUp = dot(normalize(sunPosition), gbufferModelView[1].xyz);
@@ -88,19 +80,32 @@ void main() {
 	vec3 skyLightColor = dayFactor * dayLightColor + nightFactor * nightLightColor;
 	vec3 skyAmbientColor = dayFactor * dayAmbientColor + nightFactor * nightAmbientColor;
 
+	// OPAQUE LIGHTING
+	// ===============================================
+
 	// diffuse sunlight + ambient (skylights)
-	vec3 skyLight = skyLightColor * clamp(dot(shadowLightVector, normal), 0.0, 1.0);
-	vec3 skyTotal = skyAmbientColor * lightmap.g + skyLight;
+	if (depth < 1.0) {
+		vec3 skyLight = skyLightColor * clamp(dot(shadowLightVector, normal), 0.0, 1.0);
+		vec3 skyTotal = skyAmbientColor * lightmap.g + skyLight * shadow;
+		vec3 blockTotal = blockLightColor * lightmap.r;
 
-	// block lighting
-	vec3 blockTotal = blockLightColor * lightmap.r;
+		color.rgb *= (skyTotal + blockTotal);
+	}
 
-	// combine lighting onto translucent colour
-	tlColor.rgb *= (skyTotal + blockTotal);
+	// TRANSLUCENT LIGHTING
+	// ===============================================
+	if (tlDepth < 1.0) {
+		vec3 tlSkyLight = skyLightColor * clamp(dot(shadowLightVector, tlNormal), 0.0, 1.0);
+		vec3 tlSkyTotal = skyAmbientColor * tlLightmap.g + tlSkyLight;
+		vec3 tlBlockTotal = blockLightColor * tlLightmap.r;
 
-	// composite onto base colour
+		tlColor.rgb *= (tlSkyTotal + tlBlockTotal);
+	}
+
+	// COMPOSITING (observe, premultiplied alpha)
+	// ===============================================
 	color.rgb = color.rgb * (1.0 - tlColor.a) + tlColor.rgb;
-	
+
 	// TONEMAPPING
 	// ===============================================
 

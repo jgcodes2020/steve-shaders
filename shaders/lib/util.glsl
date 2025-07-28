@@ -2,8 +2,13 @@
 #define UTIL_GLSL_INCLUDED
 
 /*
-const int colortex8Format = RGBA8;
-const vec4 colortex8ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
+// Setup transparent color buffer
+const int colortex4Format = RGBA8;
+const vec4 colortex4ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
+
+// clear normal buffers to empty normal
+const vec4 colortex2ClearColor = vec4(0.5, 0.5, 0.5, 1.0);
+const vec4 colortex5ClearColor = vec4(0.5, 0.5, 0.5, 1.0);
 */
 
 // TRANSFORMATION
@@ -59,8 +64,8 @@ const float SRGB_GAMMA = 2.2;
 const float SRGB_GAMMA_INV = 1.0 / 2.2;
 
 // Encoded normal equal to zero. This prevents lighting
-// from being processed for that object.
-const vec4 COL_NORMAL_NONE = vec4(vec3(0.5), 1.0);
+// from being processed for that pixel.
+const vec4 COL_NORMAL_NONE = vec4(0.5, 0.5, 0.5, 1.0);
 
 // Lighting: do not apply shadowing to this object.
 const uint LTG_NO_SHADOW = (1u << 0);
