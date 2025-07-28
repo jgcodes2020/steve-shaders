@@ -49,7 +49,7 @@ void main() {
 	// gamma corection
 	color.rgb = pow(color.rgb, vec3(SRGB_GAMMA));
 	// lightmap scaling
-	lightmap.rg = (lightmap.rg - (1.0 / 32.0)) * 32.0 / 30.0;
+	lightmap.rg = pow(lightmap.rg, vec2(SRGB_GAMMA));
 
 	// vector to sunlight
 	vec3 shadowLightVector = txLinear(
@@ -86,7 +86,7 @@ void main() {
 	vec3 blockTotal = blockLightColor * lightmap.r;
 
 	// combine lighting onto colour
-	color.rgb = (skyTotal + blockTotal);
+	color.rgb *= (skyTotal + blockTotal);
 	
 	// TONEMAPPING
 	// ===============================================
