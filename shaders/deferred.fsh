@@ -1,8 +1,6 @@
 #version 410 compatibility
 
-/*
-const int colortex8Format = RGBA8;
-*/
+
 
 // ===============================================
 // OPAQUE LIGHTING PASS
@@ -11,7 +9,6 @@ const int colortex8Format = RGBA8;
 uniform sampler2D colortex0; // colour (base)
 uniform sampler2D colortex1; // light info
 uniform sampler2D colortex2; // normal info
-uniform sampler2D colortex8; // colour (translucent)
 
 uniform sampler2D depthtex0; // depth
 uniform sampler2D depthtex1; // depth (opaque)
@@ -47,7 +44,6 @@ void main() {
 	vec3 normal = colorToNormal(texture(colortex2, texcoord));
 	float depth = texture(depthtex0, texcoord).r;
 	float opaqueDepth = texture(depthtex1, texcoord).r;
-	vec4 tlColor = texture(colortex8, texcoord);
 
 	if (depth == 1.0) {
 		return;
@@ -59,7 +55,6 @@ void main() {
 	// gamma corection
 	color.rgb = pow(color.rgb, vec3(SRGB_GAMMA));
 	lightmap.rg = pow(lightmap.rg, vec2(SRGB_GAMMA));
-	tlColor.rgb = pow(tlColor.rgb, vec3(SRGB_GAMMA));
 
 	// vector to sunlight
 	vec3 shadowLightVector = txLinear(
@@ -70,14 +65,14 @@ void main() {
 	// SHADOW-SPACE TRANSFORMATION
 	// ===============================================
 
-	// vec3 viewPos = screenToView(texcoord, depth);
+	vec3 viewPos = screenToView(texcoord, depth);
+	// vec3 feetPlayerPos = (gbufferModelViewInverse * vec4(viewPos, 1.0)).xyz;
+	vec3 feetPlayerPos = txAffine(gbufferModelViewInverse, viewPos);
+	vec3 shadowViewPos = txAffine(shadowModelView, feetPlayerPos);
 
-	// vec3 feetPlayerPos = txAffine(gbufferModelViewInverse, viewPos);
-	// vec3 shadowViewPos = txAffine(shadowModelView, feetPlayerPos);
-
-	// vec3 shadowScreenPos = shadowViewToScreen(shadowViewPos);
+	vec3 shadowScreenPos = shadowViewToScreen(shadowViewPos);
 	
-	// float shadow = pcfShadowTexture(shadowtex1, shadowScreenPos);
+	float shadow = pcfShadowTexture(shadowtex1, shadowScreenPos);
 
 	// LIGHTING
 	// ===============================================
@@ -90,16 +85,13 @@ void main() {
 
 	// diffuse sunlight + ambient (skylights)
 	vec3 skyLight = skyLightColor * clamp(dot(shadowLightVector, normal), 0.0, 1.0);
-	vec3 skyTotal = skyAmbientColor * lightmap.g + skyLight;
+	vec3 skyTotal = skyAmbientColor * lightmap.g + skyLight * shadow;
 
 	// block lighting
 	vec3 blockTotal = blockLightColor * lightmap.r;
 
-	// combine lighting onto translucent colour
-	tlColor.rgb *= (skyTotal + blockTotal);
-
-	// composite onto base colour
-	color.rgb = color.rgb * (1.0 - tlColor.a) + tlColor.rgb;
+	// combine lighting onto colour
+	color.rgb *= (skyTotal + blockTotal);
 	
 	// TONEMAPPING
 	// ===============================================

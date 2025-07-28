@@ -1,6 +1,11 @@
 #ifndef UTIL_GLSL_INCLUDED
 #define UTIL_GLSL_INCLUDED
 
+/*
+const int colortex8Format = RGBA8;
+const vec4 colortex8ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
+*/
+
 // TRANSFORMATION
 // ===============================================
 
