@@ -1,4 +1,4 @@
-#version 330 compatibility
+#version 410 compatibility
 
 // ===============================================
 // OPAQUE LIGHTING PASS
@@ -65,7 +65,7 @@ void main() {
 
 	vec3 shadowScreenPos = shadowViewToScreen(shadowViewPos);
 	
-	float shadow = texture(shadowtex0, shadowScreenPos);
+	float shadow = pcfShadowTexture(shadowtex0, shadowScreenPos);
 
 	// test
 	// color.rgb = vec3(texture(shadowtex0, shadowScreenPos.xy).r);

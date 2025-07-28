@@ -1,4 +1,4 @@
-#version 330 compatibility
+#version 410 compatibility
 
 out vec2 texcoord;
 out vec4 glcolor;

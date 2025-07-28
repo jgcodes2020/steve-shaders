@@ -28,6 +28,17 @@ vec3 shadowViewToScreen(vec3 shadowViewPos) {
 	return shadowScreenPos;
 }
 
+float pcfShadowTexture(sampler2DShadow shadowtex, vec3 shadowScreenPos) {
+  vec4 accum = vec4(0.0);
+
+  accum += textureGatherOffset(shadowtex, shadowScreenPos.xy, shadowScreenPos.z, ivec2(-1, -1));
+  accum += textureGatherOffset(shadowtex, shadowScreenPos.xy, shadowScreenPos.z, ivec2(-1, +1));
+  accum += textureGatherOffset(shadowtex, shadowScreenPos.xy, shadowScreenPos.z, ivec2(+1, -1));
+  accum += textureGatherOffset(shadowtex, shadowScreenPos.xy, shadowScreenPos.z, ivec2(+1, +1));
+
+  return dot(accum, vec4(1.0 / 16.0));
+}
+
 const int shadowMapResolution = 2048;
 const bool shadowHardwareFiltering = true;
 
