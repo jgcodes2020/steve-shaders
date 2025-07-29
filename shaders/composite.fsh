@@ -68,9 +68,7 @@ void main() {
 
 	// SHADOW-SPACE CALCULATIONS
 	// ===============================================
-
-	vec3 worldNormal = txLinear(gbufferModelViewInverse, normal);
-	vec3 shadowPos = screenToShadowScreen(vec3(texcoord, depth), worldNormal);
+	vec3 shadowPos = screenToShadowScreen(vec3(texcoord, depth), normal);
 	float shadow = computeShadow(shadowPos);
 
 	// LIGHTING CONSTANTS
@@ -86,6 +84,7 @@ void main() {
 	// ===============================================
 	if (depth < 1.0) {
 		vec3 skyLight = skyLightColor * clamp(dot(shadowLightVector, normal), 0.0, 1.0);
+		// vec3 skyLight = skyLightColor;
 		vec3 skyTotal = skyAmbientColor * lightmap.g + skyLight * shadow;
 		vec3 blockTotal = blockLightColor * lightmap.r;
 
@@ -107,10 +106,7 @@ void main() {
 
 	// composite translucent onto colour
 	color.rgb = color.rgb * (1.0 - tlColor.a) + tlColor.rgb;
-
-	// apply tonemap
-
-
+	
 	// inverse gamma correction
 	color.rgb = pow(color.rgb, vec3(SRGB_GAMMA_INV));
 

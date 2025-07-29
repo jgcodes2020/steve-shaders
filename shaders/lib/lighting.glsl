@@ -9,7 +9,7 @@ const vec3 blockLightColor = vec3(0.974, 0.974, 0.737);
 const vec3 ambientColor = vec3(0.1);
 
 const vec3 dayLightColor = vec3(1.0, 1.0, 1.0);
-const vec3 nightLightColor = vec3(0.00, 0.01, 0.05);
+const vec3 nightLightColor = vec3(0.02, 0.05, 0.1);
 
 const vec3 dayAmbientColor = vec3(0.15, 0.15, 0.15);
 const vec3 nightAmbientColor = vec3(0.05, 0.05, 0.05);
@@ -35,6 +35,14 @@ float horizonStep(float cosSunToUp, float satPoint) {
 	return 1.0 - xm1 * xm1;
 }
 
+vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
+	vec3 shadowNormal = mat3(shadowProjection) * (mat3(shadowModelView) * worldNormal);
+	// Multiply by the inverse of the distortion factor. This is an idea inspired by
+	// Complementary, but adapted to my own shader.
+	shadowNormal = shadowNormal * (SHADOW_DISTORTION + l4norm(clipPos.xy)) / (SHADOW_DISTORTION + 1);
+	return shadowNormal;
+}
+
 vec3 screenToShadowScreen(vec3 screenPos, vec3 worldNormal) {
 	// Convert screen space to shadow view space
 	vec3 ndcPos = screenPos * 2.0 - 1.0;
@@ -44,7 +52,7 @@ vec3 screenToShadowScreen(vec3 screenPos, vec3 worldNormal) {
 
 	// Convert to shadow clip space, adjust coordinates
 	vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
-	shadowClipPos.z -= 0.005; // shadow bias
+	shadowClipPos.xyz += shadowBias(shadowClipPos.xyz, worldNormal); // shadow bias
 	shadowClipPos.xyz = shadowDistort(shadowClipPos.xyz); // shadow distortion
 
 	// Do perspective divide, convert to screen-space
