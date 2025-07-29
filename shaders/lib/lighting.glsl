@@ -27,6 +27,12 @@ const float nightSatAngle = -0.173648;
 // -> night: sun is ~10 degrees below horizon (theta = 100)
 // -> day: sun is ~25 degrees above horizon (theta = 75)
 
+const float SHADOW_MID_THRESH = 0.4;
+const float SHADOW_FAR_THRESH = 0.7;
+
+// UTILITY FUNCTIONS FOR LIGHTING
+// ===============================================
+
 // Ease-out transition between 0 and the saturation point.
 float horizonStep(float cosSunToUp, float satPoint) {
 	float x = clamp(cosSunToUp / satPoint, 0.0, 1.0);
@@ -60,21 +66,8 @@ vec3 screenToShadowScreen(vec3 screenPos, vec3 worldNormal) {
 	return shadowNdcPos * 0.5 + 0.5;
 }
 
-/*
-// This is the reference hard-shadow implementation.
-float computeShadow(vec3 shadowScreenPos) {
-	float test = texture(shadowtex1, shadowScreenPos);
-	float tlTest = texture(shadowtex0, shadowScreenPos);
-
-	if (test == 0.0) {
-		return 0.0;
-	}
-	if (tlTest == 1.0) {
-		return 1.0;
-	}
-	return 1.0 - texture(shadowcolor0, shadowScreenPos.xy).a;
-}
-*/
+// HARD SHADOWS (for reference)
+// ===============================================
 
 float computeShadow(vec3 shadowScreenPos) {
 	float test = texture(shadowtex1, shadowScreenPos);
@@ -83,5 +76,93 @@ float computeShadow(vec3 shadowScreenPos) {
 
 	return max(tlTest, max(test - alpha, 0.0));
 }
+
+float tlComputeShadow(vec3 shadowScreenPos, float alpha) {
+	float tlTest = texture(shadowtex0, shadowScreenPos);
+	return (tlTest == 1.0) ? 1.0 : 1.0 - alpha;
+}
+
+// SOFT SHADOWS
+// ===============================================
+// These are just PCF-filtered versions of the hard shadow functions.
+// They use varying kernel sizes to account for the changing sample
+// precision of the shadow map.
+
+float computeShadowSoft(vec3 shadowScreenPos) {
+	float norm = l4norm(shadowScreenPos.xy);
+	// box blur kernel
+	#define GATHER_OFFSET(x, y) \
+		do { \
+			vec4 test = textureGatherOffset(shadowtex1, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
+			vec4 tlTest = textureGatherOffset(shadowtex0, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
+			vec4 alpha = textureGatherOffset(shadowcolor0, shadowScreenPos.xy, ivec2(x, y), 3); \
+			accum += max(tlTest, max(test - alpha, vec4(0.0))); \
+		} while (false)
+
+	if (norm < SHADOW_MID_THRESH) {
+		// 4x4 PCF
+		vec4 accum = vec4(0.0);
+		GATHER_OFFSET(-1, -1);
+		GATHER_OFFSET(-1, +1);
+		GATHER_OFFSET(+1, -1);
+		GATHER_OFFSET(+1, +1);
+		return dot(accum, vec4(1.0 / 16.0));
+	}
+	else if (norm < SHADOW_FAR_THRESH) {
+		// 2x2 PCF
+		vec4 accum = vec4(0.0);
+		GATHER_OFFSET(0, 0);
+		return dot(accum, vec4(1.0 / 4.0));
+	}
+	else {
+		// Interpolated texture sample
+		float test = texture(shadowtex1, shadowScreenPos);
+		float tlTest = texture(shadowtex0, shadowScreenPos);
+		float alpha = texture(shadowcolor0, shadowScreenPos.xy).a;
+
+		return max(tlTest, max(test - alpha, 0.0));
+	}
+
+	#undef GATHER_OFFSET
+}
+
+float tlComputeShadowSoft(vec3 shadowScreenPos, float alpha) {
+	vec4 accum = vec4(0.0);
+	float norm = l4norm(shadowScreenPos.xy);
+	
+	#define GATHER_OFFSET(x, y) \
+		do { \
+			vec4 tlTest = textureGatherOffset(shadowtex0, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
+			accum += mix(vec4(1.0), vec4(1.0 - alpha), equal(tlTest, vec4(1.0))); \
+		} while (false)
+
+	if (norm < SHADOW_MID_THRESH) {
+		vec4 accum = vec4(0.0);
+		GATHER_OFFSET(-1, -1);
+		GATHER_OFFSET(-1, +1);
+		GATHER_OFFSET(+1, -1);
+		GATHER_OFFSET(+1, +1);
+		return dot(accum, vec4(1.0 / 16.0));
+	}
+	else if (norm < SHADOW_FAR_THRESH) {
+		vec4 accum = vec4(0.0);
+		GATHER_OFFSET(0, 0);
+		return dot(accum, vec4(1.0 / 4.0));
+	}
+	else {
+		float tlTest = texture(shadowtex0, shadowScreenPos);
+		return (tlTest == 1.0) ? 1.0 : 1.0 - alpha;
+	}
+
+	#undef GATHER_OFFSET
+}
+
+vec3 reinhardJodie(vec3 v)
+{
+	float l = dot(v, vec3(0.2126, 0.7152, 0.0722));
+	vec3 tv = v / (1.0 + v);
+	return mix(v / (1.0 + l), tv, tv);
+}
+
 
 #endif

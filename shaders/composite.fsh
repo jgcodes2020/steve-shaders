@@ -69,7 +69,10 @@ void main() {
 	// SHADOW-SPACE CALCULATIONS
 	// ===============================================
 	vec3 shadowPos = screenToShadowScreen(vec3(texcoord, depth), normal);
-	float shadow = computeShadow(shadowPos);
+	float shadow = computeShadowSoft(shadowPos);
+
+	vec3 tlShadowPos = screenToShadowScreen(vec3(texcoord, tlDepth), tlNormal);
+	float tlShadow = tlComputeShadowSoft(tlShadowPos, tlColor.a);
 
 	// LIGHTING CONSTANTS
 	// ===============================================
@@ -82,6 +85,7 @@ void main() {
 
 	// OPAQUE LIGHTING
 	// ===============================================
+
 	if (depth < 1.0) {
 		vec3 skyLight = skyLightColor * clamp(dot(shadowLightVector, normal), 0.0, 1.0);
 		// vec3 skyLight = skyLightColor;
@@ -93,9 +97,10 @@ void main() {
 
 	// TRANSLUCENT LIGHTING
 	// ===============================================
+
 	if (tlDepth < 1.0) {
 		vec3 tlSkyLight = skyLightColor * clamp(dot(shadowLightVector, tlNormal), 0.0, 1.0);
-		vec3 tlSkyTotal = skyAmbientColor * tlLightmap.g + tlSkyLight;
+		vec3 tlSkyTotal = skyAmbientColor * tlLightmap.g + tlSkyLight * tlShadow;
 		vec3 tlBlockTotal = blockLightColor * tlLightmap.r;
 
 		tlColor.rgb *= (tlSkyTotal + tlBlockTotal);
@@ -106,6 +111,9 @@ void main() {
 
 	// composite translucent onto colour
 	color.rgb = color.rgb * (1.0 - tlColor.a) + tlColor.rgb;
+	
+	// Reinhard-Jodie tonemap
+	color.rgb = reinhardJodie(color.rgb);
 	
 	// inverse gamma correction
 	color.rgb = pow(color.rgb, vec3(SRGB_GAMMA_INV));
