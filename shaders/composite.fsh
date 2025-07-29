@@ -101,12 +101,14 @@ void main() {
 		tlColor.rgb *= (tlSkyTotal + tlBlockTotal);
 	}
 
-	// COMPOSITING (observe, premultiplied alpha)
+	// COMPOSITE AND TONEMAP
 	// ===============================================
+
+	// composite translucent onto colour
 	color.rgb = color.rgb * (1.0 - tlColor.a) + tlColor.rgb;
 
-	// TONEMAPPING
-	// ===============================================
+	// apply tonemap
+
 
 	// inverse gamma correction
 	color.rgb = pow(color.rgb, vec3(SRGB_GAMMA_INV));

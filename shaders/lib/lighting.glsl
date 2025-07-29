@@ -35,6 +35,8 @@ float horizonStep(float cosSunToUp, float satPoint) {
 	return 1.0 - xm1 * xm1;
 }
 
+// Transforms from shadow view space to shadow screen space, accounting
+// for bias and distortion.
 vec3 shadowViewToScreen(vec3 shadowViewPos) {
 	vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
 	shadowClipPos.z -= 0.005; // shadow bias
@@ -51,6 +53,7 @@ vec3 screenToShadowScreen(vec2 texcoord, float depth) {
 	vec3 shadowViewPos = txAffine(shadowModelView, feetPlayerPos);
   return shadowViewToScreen(shadowViewPos);
 }
+
 /*
 // This is the reference hard-shadow implementation.
 float computeShadow(vec3 shadowScreenPos) {
@@ -68,22 +71,11 @@ float computeShadow(vec3 shadowScreenPos) {
 */
 
 float computeShadow(vec3 shadowScreenPos) {
-	vec4 accum = vec4(0.0);
+	float test = texture(shadowtex1, shadowScreenPos);
+	float tlTest = texture(shadowtex0, shadowScreenPos);
+	float alpha = texture(shadowcolor0, shadowScreenPos.xy).a;
 
-	#define GATHER_OFFSET(x, y) \
-		do { \
-			vec4 test = textureGatherOffset(shadowtex1, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
-			vec4 tlTest = textureGatherOffset(shadowtex0, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
-			vec4 tlAlpha = textureGatherOffset(shadowcolor0, shadowScreenPos.xy, ivec2(x, y), 3); \
-			accum += max(tlTest, max(test - tlAlpha, vec4(0.0))); \
-		} while (false)
-
-	GATHER_OFFSET(-1, -1);
-	GATHER_OFFSET(-1, +1);
-	GATHER_OFFSET(+1, -1);
-	GATHER_OFFSET(+1, +1);
-
-	return dot(accum, vec4(1.0 / 16.0));
+	return max(tlTest, max(test - alpha, 0.0));
 }
 
 #endif
