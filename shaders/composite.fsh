@@ -69,7 +69,8 @@ void main() {
 	// SHADOW-SPACE CALCULATIONS
 	// ===============================================
 
-	vec3 shadowPos = screenToShadowScreen(texcoord, depth);
+	vec3 worldNormal = txLinear(gbufferModelViewInverse, normal);
+	vec3 shadowPos = screenToShadowScreen(vec3(texcoord, depth), worldNormal);
 	float shadow = computeShadow(shadowPos);
 
 	// LIGHTING CONSTANTS

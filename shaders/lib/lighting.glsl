@@ -35,23 +35,21 @@ float horizonStep(float cosSunToUp, float satPoint) {
 	return 1.0 - xm1 * xm1;
 }
 
-// Transforms from shadow view space to shadow screen space, accounting
-// for bias and distortion.
-vec3 shadowViewToScreen(vec3 shadowViewPos) {
-	vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
-	shadowClipPos.z -= 0.005; // shadow bias
-	shadowClipPos.xyz = distortShadowClipPos(shadowClipPos.xyz);
-	vec3 shadowNdcPos = shadowClipPos.xyz / shadowClipPos.w;
-	vec3 shadowScreenPos = shadowNdcPos * 0.5 + 0.5;
-	return shadowScreenPos;
-}
-
-vec3 screenToShadowScreen(vec2 texcoord, float depth) {
-	vec3 ndcPos = vec3(texcoord, depth) * 2.0 - 1.0;
+vec3 screenToShadowScreen(vec3 screenPos, vec3 worldNormal) {
+	// Convert screen space to shadow view space
+	vec3 ndcPos = screenPos * 2.0 - 1.0;
   vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);
 	vec3 feetPlayerPos = txAffine(gbufferModelViewInverse, viewPos);
 	vec3 shadowViewPos = txAffine(shadowModelView, feetPlayerPos);
-  return shadowViewToScreen(shadowViewPos);
+
+	// Convert to shadow clip space, adjust coordinates
+	vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
+	shadowClipPos.z -= 0.005; // shadow bias
+	shadowClipPos.xyz = shadowDistort(shadowClipPos.xyz); // shadow distortion
+
+	// Do perspective divide, convert to screen-space
+	vec3 shadowNdcPos = shadowClipPos.xyz / shadowClipPos.w;
+	return shadowNdcPos * 0.5 + 0.5;
 }
 
 /*
