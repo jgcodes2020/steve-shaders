@@ -62,29 +62,111 @@ vec3 screenToShadowScreen(vec3 screenPos, vec3 normal) {
 // LIGHTING MODEL
 // ===============================================
 
-//
-vec3 diffuseLight(
-	vec3 ambientColor, 
-	vec3 skyLightColor, 
-	vec3 blockLightColor,
-	vec2 lightmap, 
-	vec3 normal,
-	vec3 lightDir,
-	float shadow
-) {
-	vec3 skyLight = skyLightColor * clamp(dot(lightDir, normal), 0.0, 1.0);
-	// vec3 skyLight = skyLightColor;
-	vec3 skyTotal = skyAmbientColor * lightmap.g + skyLight * shadow;
-	vec3 blockTotal = blockLightColor * lightmap.r;
+struct LightingInfo {
+	vec4 color;
+	vec2 lightmap;
+	uint lightFlags;
+	vec3 normal;
+	float depth;
 
-	return (skyTotal + blockTotal);
+	vec4 tlColor;
+	vec2 tlLightmap;
+	uint tlLightFlags;
+	vec3 tlNormal;
+	float tlDepth;
+};
+
+bool readLightInfo(vec2 texcoord, out LightingInfo info) {
+	// Fetch data values
+	vec4 color1Sample = texture(colortex1, texcoord);
+	vec4 color5Sample = texture(colortex5, texcoord);
+
+	info = LightingInfo(
+		texture(colortex0, texcoord), // color
+		color1Sample.rg, // lightmap
+		colorToFlags(color1Sample.b), // lightFlags
+		colorToNormal(texture(colortex2, texcoord)), // normal
+		texture(depthtex1, texcoord).r, // depth
+		texture(colortex4, texcoord), // tlColor
+		color5Sample.rg, // tlLightmap
+		colorToFlags(color5Sample.b), // tlLightFlags
+		colorToNormal(texture(colortex6, texcoord)), // tlNormal
+		texture(depthtex0, texcoord).r // tlDepth
+	);
+
+	// Check if this fragment can be skipped
+	if (info.depth + info.tlDepth == 2.0) {
+		color = info.color;
+		return true;
+	}
+	
+	// gamma corection
+	info.color.rgb = pow(info.color.rgb, vec3(SRGB_GAMMA));
+	info.lightmap.rg = pow(info.lightmap.rg, vec2(SRGB_GAMMA));
+
+	info.tlColor.rgb = pow(info.tlColor.rgb, vec3(SRGB_GAMMA));
+	info.tlLightmap.rg = pow(info.tlLightmap.rg, vec2(SRGB_GAMMA));
+	return false;
+}
+
+void diffuseLighting(inout LightingInfo info) {
+	// SHADOW-SPACE CALCULATIONS
+	// ===============================================
+
+	// vector to sunlight
+	vec3 lightDir = txLinear(
+		gbufferModelViewInverse, 
+		normalize(shadowLightPosition)
+	);
+
+	vec3 shadowPos = screenToShadowScreen(vec3(texcoord, info.depth), info.normal);
+	float shadow = computeShadowSoft(shadowPos);
+	if ((info.lightFlags & LTG_NO_SHADOW) != 0) {
+		shadow = 1.0;
+	}
+
+	vec3 tlShadowPos = screenToShadowScreen(vec3(texcoord, info.tlDepth), info.tlNormal);
+	float tlShadow = tlComputeShadowSoft(tlShadowPos, info.tlColor.a);
+	if ((info.tlLightFlags & LTG_NO_SHADOW) != 0) {
+		tlShadow = 1.0;
+	}
+
+	// LIGHTING CONSTANTS
+	// ===============================================
+
+	float cosSunToUp = dot(normalize(sunPosition), gbufferModelView[1].xyz);
+	float dayFactor = horizonStep(cosSunToUp, daySatAngle);
+	float nightFactor = horizonStep(cosSunToUp, nightSatAngle);
+	vec3 skyLightColor = dayFactor * dayLightColor + nightFactor * nightLightColor;
+	vec3 skyAmbientColor = dayFactor * dayAmbientColor + nightFactor * nightAmbientColor;
+
+	// OPAQUE LIGHTING
+	// ===============================================
+
+	if (info.depth < 1.0) {
+		vec3 skyLight = skyLightColor * clamp(dot(lightDir, info.normal), 0.0, 1.0);
+		vec3 skyTotal = skyAmbientColor * info.lightmap.g + skyLight * shadow;
+		vec3 blockTotal = blockLightColor * info.lightmap.r;
+
+		info.color.rgb *= (skyTotal + blockTotal);
+	}
+
+	// TRANSLUCENT LIGHTING
+	// ===============================================
+
+	if (info.tlDepth < 1.0) {
+		vec3 tlSkyLight = skyLightColor * clamp(dot(lightDir, info.tlNormal), 0.0, 1.0);
+		vec3 tlSkyTotal = skyAmbientColor * info.tlLightmap.g + tlSkyLight * tlShadow;
+		vec3 tlBlockTotal = blockLightColor * info.tlLightmap.r;
+
+		info.tlColor.rgb *= (tlSkyTotal + tlBlockTotal);
+	}
 }
 
 // SOFT SHADOWS
 // ===============================================
-// These are just PCF-filtered versions of the hard shadow functions.
-// They use varying kernel sizes to account for the changing sample
-// rate of the shadow map.
+// This is pretty much a vectorized version of PCF. It does suffer from
+// being pixelated.
 
 float computeShadowSoft(vec3 shadowScreenPos) {
 	float norm = length((shadowScreenPos.xy - 0.5) * 2.0);

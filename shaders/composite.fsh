@@ -42,30 +42,13 @@ layout(location = 0) out vec4 color;
 #include "/lib/shadow.glsl"
 
 void main() {
-	// fetch other values
-	color = texture(colortex0, texcoord);
-	vec2 lightmap = texture(colortex1, texcoord).rg;
-	uint lightFlags = colorToFlags(texture(colortex1, texcoord).b);
-	vec3 normal = colorToNormal(texture(colortex2, texcoord));
-	float depth = texture(depthtex1, texcoord).r;
-
-	vec4 tlColor = texture(colortex4, texcoord);
-	vec2 tlLightmap = texture(colortex5, texcoord).rg;
-	uint tlLightFlags = colorToFlags(texture(colortex5, texcoord).b);
-	vec3 tlNormal = colorToNormal(texture(colortex6, texcoord));
-	float tlDepth = texture(depthtex0, texcoord).r;
-
-	// skip this fragment if it's entirely sky
-	if (depth + tlDepth == 2.0) {
+	LightingInfo info;
+	if (readLightInfo(texcoord, info)) {
 		return;
 	}
-	
-	// gamma corection
-	color.rgb = pow(color.rgb, vec3(SRGB_GAMMA));
-	lightmap.rg = pow(lightmap.rg, vec2(SRGB_GAMMA));
 
-	tlColor.rgb = pow(tlColor.rgb, vec3(SRGB_GAMMA));
-	tlLightmap.rg = pow(tlLightmap.rg, vec2(SRGB_GAMMA));
+	// SHADOW-SPACE CALCULATIONS
+	// ===============================================
 
 	// vector to sunlight
 	vec3 lightDir = txLinear(
@@ -73,17 +56,15 @@ void main() {
 		normalize(shadowLightPosition)
 	);
 
-	// SHADOW-SPACE CALCULATIONS
-	// ===============================================
-	vec3 shadowPos = screenToShadowScreen(vec3(texcoord, depth), normal);
+	vec3 shadowPos = screenToShadowScreen(vec3(texcoord, info.depth), info.normal);
 	float shadow = computeShadowSoft(shadowPos);
-	if ((lightFlags & LTG_NO_SHADOW) != 0) {
+	if ((info.lightFlags & LTG_NO_SHADOW) != 0) {
 		shadow = 1.0;
 	}
 
-	vec3 tlShadowPos = screenToShadowScreen(vec3(texcoord, tlDepth), tlNormal);
-	float tlShadow = tlComputeShadowSoft(tlShadowPos, tlColor.a);
-	if ((tlLightFlags & LTG_NO_SHADOW) != 0) {
+	vec3 tlShadowPos = screenToShadowScreen(vec3(texcoord, info.tlDepth), info.tlNormal);
+	float tlShadow = tlComputeShadowSoft(tlShadowPos, info.tlColor.a);
+	if ((info.tlLightFlags & LTG_NO_SHADOW) != 0) {
 		tlShadow = 1.0;
 	}
 
@@ -99,36 +80,34 @@ void main() {
 	// OPAQUE LIGHTING
 	// ===============================================
 
-	if (depth < 1.0) {
-		vec3 skyLight = skyLightColor * clamp(dot(lightDir, normal), 0.0, 1.0);
-		vec3 skyTotal = skyAmbientColor * lightmap.g + skyLight * shadow;
-		vec3 blockTotal = blockLightColor * lightmap.r;
+	if (info.depth < 1.0) {
+		vec3 skyLight = skyLightColor * clamp(dot(lightDir, info.normal), 0.0, 1.0);
+		vec3 skyTotal = skyAmbientColor * info.lightmap.g + skyLight * shadow;
+		vec3 blockTotal = blockLightColor * info.lightmap.r;
 
-		color.rgb *= (skyTotal + blockTotal);
+		info.color.rgb *= (skyTotal + blockTotal);
 	}
 
 	// TRANSLUCENT LIGHTING
 	// ===============================================
 
-	if (tlDepth < 1.0) {
-		vec3 tlSkyLight = skyLightColor * clamp(dot(lightDir, tlNormal), 0.0, 1.0);
-		vec3 tlSkyTotal = skyAmbientColor * tlLightmap.g + tlSkyLight * tlShadow;
-		vec3 tlBlockTotal = blockLightColor * tlLightmap.r;
+	if (info.tlDepth < 1.0) {
+		vec3 tlSkyLight = skyLightColor * clamp(dot(lightDir, info.tlNormal), 0.0, 1.0);
+		vec3 tlSkyTotal = skyAmbientColor * info.tlLightmap.g + tlSkyLight * tlShadow;
+		vec3 tlBlockTotal = blockLightColor * info.tlLightmap.r;
 
-		tlColor.rgb *= (tlSkyTotal + tlBlockTotal);
+		info.tlColor.rgb *= (tlSkyTotal + tlBlockTotal);
 	}
 
 	// COMPOSITE AND TONEMAP
 	// ===============================================
 
 	// composite translucent onto colour
-	color.rgb = color.rgb * (1.0 - tlColor.a) + tlColor.rgb;
+	info.color.rgb = info.color.rgb * (1.0 - info.tlColor.a) + info.tlColor.rgb;
 	
 	// Reinhard-Jodie tonemap
-	color.rgb = reinhardJodie(color.rgb);
+	info.color.rgb = reinhardJodie(info.color.rgb);
 	
 	// inverse gamma correction
-	color.rgb = pow(color.rgb, vec3(SRGB_GAMMA_INV));
-
-	
+	color.rgb = pow(info.color.rgb, vec3(SRGB_GAMMA_INV));	
 }
