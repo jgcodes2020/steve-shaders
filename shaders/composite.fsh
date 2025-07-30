@@ -45,11 +45,13 @@ void main() {
 	// fetch other values
 	color = texture(colortex0, texcoord);
 	vec2 lightmap = texture(colortex1, texcoord).rg;
+	uint lightFlags = colorToFlags(texture(colortex1, texcoord).b);
 	vec3 normal = colorToNormal(texture(colortex2, texcoord));
 	float depth = texture(depthtex1, texcoord).r;
 
 	vec4 tlColor = texture(colortex4, texcoord);
 	vec2 tlLightmap = texture(colortex5, texcoord).rg;
+	uint tlLightFlags = colorToFlags(texture(colortex5, texcoord).b);
 	vec3 tlNormal = colorToNormal(texture(colortex6, texcoord));
 	float tlDepth = texture(depthtex0, texcoord).r;
 
@@ -75,9 +77,15 @@ void main() {
 	// ===============================================
 	vec3 shadowPos = screenToShadowScreen(vec3(texcoord, depth), normal);
 	float shadow = computeShadowSoft(shadowPos);
+	if ((lightFlags & LTG_NO_SHADOW) != 0) {
+		shadow = 1.0;
+	}
 
 	vec3 tlShadowPos = screenToShadowScreen(vec3(texcoord, tlDepth), tlNormal);
 	float tlShadow = tlComputeShadowSoft(tlShadowPos, tlColor.a);
+	if ((tlLightFlags & LTG_NO_SHADOW) != 0) {
+		tlShadow = 1.0;
+	}
 
 	// LIGHTING CONSTANTS
 	// ===============================================

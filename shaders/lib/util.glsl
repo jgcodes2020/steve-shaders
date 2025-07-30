@@ -6,9 +6,13 @@
 const int colortex4Format = RGBA8;
 const vec4 colortex4ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
 
+// Setup normal buffer
+const int colortex1Format = RGB8;
+const int colortex5Format = RGB8;
+
 // clear normal buffers to empty normal
 const vec4 colortex2ClearColor = vec4(0.5, 0.5, 0.5, 1.0);
-const vec4 colortex5ClearColor = vec4(0.5, 0.5, 0.5, 1.0);
+const vec4 colortex6ClearColor = vec4(0.5, 0.5, 0.5, 1.0);
 */
 
 // TRANSFORMATION
@@ -68,11 +72,11 @@ vec3 colorToNormal(vec4 colour) {
 
 // Convert a set of 8 flags to a color component.
 float flagsToColor(uint flags) {
-  return float(flags & 0xFF) / 256.0;
+  return float(flags & 0xFFu) / 255.0;
 }
 // Convert a color component to a set of 8 flags.
 uint colorToFlags(float color) {
-  return uint(color * 256.0);
+  return uint(color * 255.0);
 }
 
 // USEFUL CONSTANTS

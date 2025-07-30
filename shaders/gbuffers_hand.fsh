@@ -10,7 +10,7 @@ in vec2 texcoord;
 in vec4 glcolor;
 in vec3 normal;
 
-/* RENDERTARGETS: 4,5,6 */
+/* RENDERTARGETS: 0,1,2 */
 layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 lightInfo;
 layout(location = 2) out vec4 normInfo;
@@ -22,8 +22,6 @@ void main() {
 	if (color.a < alphaTestRef) {
 		discard;
 	}
-	// premultiply alpha
-	color.rgb *= color.a;
 
 	uint lightFlags = LTG_NO_SHADOW;
 
