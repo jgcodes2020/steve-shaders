@@ -7,13 +7,13 @@ const int shadowMapResolution = 2048;
 const float shadowDistance = 160.0;
 const bool shadowHardwareFiltering = true;
 
-const float SHADOW_DISTORTION = 0.2;
+const float SHADOW_DISTORTION = 0.1;
 
-float l4norm(vec2 pos) {
-  pos *= pos;
-  float sum = dot(pos, pos);
-  return sqrt(sqrt(sum));
-}
+// const bool shadowtex0Nearest = true;
+// const bool shadowtex1Nearest = true;
+// const bool shadowcolor0Nearest = true;
+
+
 
 // Distorts positions in shadow space to enlarge shadows near the player
 vec3 shadowDistort(vec3 clipPos) {

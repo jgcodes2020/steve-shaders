@@ -3,7 +3,7 @@
 
 
 // ===============================================
-// OPAQUE LIGHTING PASS
+// LIGHTING PASS
 // ===============================================
 
 uniform sampler2D colortex0; // colour
@@ -30,7 +30,7 @@ uniform mat4 gbufferModelViewInverse; // view -> world
 uniform mat4 shadowModelView; // player -> shadow
 uniform mat4 shadowProjection; // shadow -> shadow NDC
 
-uniform vec3 skyLightColor; // skylight color (depending on moon, sun, and weather)
+uniform float nightVision;
 
 in vec2 texcoord;
 
@@ -52,6 +52,11 @@ void main() {
 	vec2 tlLightmap = texture(colortex5, texcoord).rg;
 	vec3 tlNormal = colorToNormal(texture(colortex6, texcoord));
 	float tlDepth = texture(depthtex0, texcoord).r;
+
+	// skip this fragment if it's entirely sky
+	if (depth + tlDepth == 2.0) {
+		return;
+	}
 	
 	// gamma corection
 	color.rgb = pow(color.rgb, vec3(SRGB_GAMMA));
@@ -61,7 +66,7 @@ void main() {
 	tlLightmap.rg = pow(tlLightmap.rg, vec2(SRGB_GAMMA));
 
 	// vector to sunlight
-	vec3 shadowLightVector = txLinear(
+	vec3 lightDir = txLinear(
 		gbufferModelViewInverse, 
 		normalize(shadowLightPosition)
 	);
@@ -87,8 +92,7 @@ void main() {
 	// ===============================================
 
 	if (depth < 1.0) {
-		vec3 skyLight = skyLightColor * clamp(dot(shadowLightVector, normal), 0.0, 1.0);
-		// vec3 skyLight = skyLightColor;
+		vec3 skyLight = skyLightColor * clamp(dot(lightDir, normal), 0.0, 1.0);
 		vec3 skyTotal = skyAmbientColor * lightmap.g + skyLight * shadow;
 		vec3 blockTotal = blockLightColor * lightmap.r;
 
@@ -99,7 +103,7 @@ void main() {
 	// ===============================================
 
 	if (tlDepth < 1.0) {
-		vec3 tlSkyLight = skyLightColor * clamp(dot(shadowLightVector, tlNormal), 0.0, 1.0);
+		vec3 tlSkyLight = skyLightColor * clamp(dot(lightDir, tlNormal), 0.0, 1.0);
 		vec3 tlSkyTotal = skyAmbientColor * tlLightmap.g + tlSkyLight * tlShadow;
 		vec3 tlBlockTotal = blockLightColor * tlLightmap.r;
 

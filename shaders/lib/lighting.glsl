@@ -28,28 +28,21 @@ const float nightSatAngle = -0.173648;
 // -> day: sun is ~25 degrees above horizon (theta = 75)
 
 const float SHADOW_MID_THRESH = 0.4;
-const float SHADOW_FAR_THRESH = 0.7;
+const float SHADOW_FAR_THRESH = 0.95;
 
-// UTILITY FUNCTIONS FOR LIGHTING
+// SHADOW-SPACE TRANSFORMATIONS
 // ===============================================
 
-// Ease-out transition between 0 and the saturation point.
-float horizonStep(float cosSunToUp, float satPoint) {
-	float x = clamp(cosSunToUp / satPoint, 0.0, 1.0);
-	// quadratic ease-out
-	float xm1 = x - 1.0;
-	return 1.0 - xm1 * xm1;
-}
-
 vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
+	// project the normal into shadow space.
 	vec3 shadowNormal = mat3(shadowProjection) * (mat3(shadowModelView) * worldNormal);
 	// Multiply by the inverse of the distortion factor. This is an idea inspired by
 	// Complementary, but adapted to my own shader.
-	shadowNormal = shadowNormal * (SHADOW_DISTORTION + l4norm(clipPos.xy)) / (SHADOW_DISTORTION + 1);
+	shadowNormal = shadowNormal * (SHADOW_DISTORTION + length(clipPos.xy)) / (SHADOW_DISTORTION + 1);
 	return shadowNormal;
 }
 
-vec3 screenToShadowScreen(vec3 screenPos, vec3 worldNormal) {
+vec3 screenToShadowScreen(vec3 screenPos, vec3 normal) {
 	// Convert screen space to shadow view space
 	vec3 ndcPos = screenPos * 2.0 - 1.0;
   vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);
@@ -58,7 +51,7 @@ vec3 screenToShadowScreen(vec3 screenPos, vec3 worldNormal) {
 
 	// Convert to shadow clip space, adjust coordinates
 	vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
-	shadowClipPos.xyz += shadowBias(shadowClipPos.xyz, worldNormal); // shadow bias
+	shadowClipPos.xyz += shadowBias(shadowClipPos.xyz, normal); // shadow bias
 	shadowClipPos.xyz = shadowDistort(shadowClipPos.xyz); // shadow distortion
 
 	// Do perspective divide, convert to screen-space
@@ -66,30 +59,35 @@ vec3 screenToShadowScreen(vec3 screenPos, vec3 worldNormal) {
 	return shadowNdcPos * 0.5 + 0.5;
 }
 
-// HARD SHADOWS (for reference)
+// LIGHTING MODEL
 // ===============================================
 
-float computeShadow(vec3 shadowScreenPos) {
-	float test = texture(shadowtex1, shadowScreenPos);
-	float tlTest = texture(shadowtex0, shadowScreenPos);
-	float alpha = texture(shadowcolor0, shadowScreenPos.xy).a;
+//
+vec3 diffuseLight(
+	vec3 ambientColor, 
+	vec3 skyLightColor, 
+	vec3 blockLightColor,
+	vec2 lightmap, 
+	vec3 normal,
+	vec3 lightDir,
+	float shadow
+) {
+	vec3 skyLight = skyLightColor * clamp(dot(lightDir, normal), 0.0, 1.0);
+	// vec3 skyLight = skyLightColor;
+	vec3 skyTotal = skyAmbientColor * lightmap.g + skyLight * shadow;
+	vec3 blockTotal = blockLightColor * lightmap.r;
 
-	return max(tlTest, max(test - alpha, 0.0));
-}
-
-float tlComputeShadow(vec3 shadowScreenPos, float alpha) {
-	float tlTest = texture(shadowtex0, shadowScreenPos);
-	return (tlTest == 1.0) ? 1.0 : 1.0 - alpha;
+	return (skyTotal + blockTotal);
 }
 
 // SOFT SHADOWS
 // ===============================================
 // These are just PCF-filtered versions of the hard shadow functions.
 // They use varying kernel sizes to account for the changing sample
-// precision of the shadow map.
+// rate of the shadow map.
 
 float computeShadowSoft(vec3 shadowScreenPos) {
-	float norm = l4norm(shadowScreenPos.xy);
+	float norm = length((shadowScreenPos.xy - 0.5) * 2.0);
 	// box blur kernel
 	#define GATHER_OFFSET(x, y) \
 		do { \
@@ -133,7 +131,7 @@ float tlComputeShadowSoft(vec3 shadowScreenPos, float alpha) {
 	#define GATHER_OFFSET(x, y) \
 		do { \
 			vec4 tlTest = textureGatherOffset(shadowtex0, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
-			accum += mix(vec4(1.0), vec4(1.0 - alpha), equal(tlTest, vec4(1.0))); \
+			accum += mix(vec4(1.0 - alpha), vec4(1.0), equal(tlTest, vec4(1.0))); \
 		} while (false)
 
 	if (norm < SHADOW_MID_THRESH) {
@@ -157,9 +155,8 @@ float tlComputeShadowSoft(vec3 shadowScreenPos, float alpha) {
 	#undef GATHER_OFFSET
 }
 
-vec3 reinhardJodie(vec3 v)
-{
-	float l = dot(v, vec3(0.2126, 0.7152, 0.0722));
+vec3 reinhardJodie(vec3 v) {
+	float l = dot(v, LUMA_COEFFS);
 	vec3 tv = v / (1.0 + v);
 	return mix(v / (1.0 + l), tv, tv);
 }

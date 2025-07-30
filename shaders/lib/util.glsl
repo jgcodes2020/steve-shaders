@@ -29,6 +29,24 @@ vec3 txLinear(mat4 matrix, vec3 position) {
 	return mat3(matrix) * position;
 }
 
+// WEIRD MATH FUNCTIONS
+// ===============================================
+
+// Ease-out transition between 0 and the saturation point.
+float horizonStep(float cosSunToUp, float satPoint) {
+	float x = clamp(cosSunToUp / satPoint, 0.0, 1.0);
+	// quadratic ease-out
+	float xm1 = x - 1.0;
+	return 1.0 - xm1 * xm1;
+}
+
+// 4-norm of a vector.
+float l4norm(vec2 pos) {
+  pos *= pos;
+  float sum = dot(pos, pos);
+  return sqrt(sqrt(sum));
+}
+
 // ENCODING
 // ===============================================
 
@@ -60,8 +78,12 @@ uint colorToFlags(float color) {
 // USEFUL CONSTANTS
 // ===============================================
 
+// The SRGB gamma and reciproclal gamma
 const float SRGB_GAMMA = 2.2;
 const float SRGB_GAMMA_INV = 1.0 / 2.2;
+
+// Coefficients for measuring luma/luminance.
+const vec3 LUMA_COEFFS = vec3(0.2126, 0.7152, 0.0722);
 
 // Encoded normal equal to zero. This prevents lighting
 // from being processed for that pixel.
