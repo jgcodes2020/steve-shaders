@@ -50,7 +50,7 @@ vec4[4] shadowBilinearKernel(vec2 texcoord) {
 	);
 }
 
-// Samples a shadow texture using a precomputed bilinear kernel.
+// Samples a shadow texture using a precomputed 4x4 bilinear kernel.
 // Kernel weights are expected to add to 9.
 float texture4x4Kernel(sampler2DShadow t, vec3 texcoord, vec4[4] kernel) {
 	const ivec2[4] offsets = ivec2[](
@@ -66,7 +66,7 @@ float texture4x4Kernel(sampler2DShadow t, vec3 texcoord, vec4[4] kernel) {
 	accum += textureGatherOffset(t, texcoord.xy, texcoord.z, offsets[3]) * kernel[3];
 	return dot(accum, vec4(1.0 / 9.0));
 }
-// Samples the alpha component of a texture using a precomputed bilinear kernel.
+// Samples the alpha component of a texture using a precomputed 4x4 bilinear kernel.
 // Kernel weights are expected to add to 9.
 float texture4x4Kernel_a(sampler2D t, vec2 texcoord, vec4[4] kernel) {
 	const ivec2[4] offsets = ivec2[](

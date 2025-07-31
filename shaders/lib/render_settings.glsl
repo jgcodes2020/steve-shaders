@@ -16,6 +16,7 @@ const int colortex6Format = RGB8;
 
 
 const vec4 colortex2ClearColor = vec4(0.5, 0.5, 0.5, 1.0);
+const vec4 colortex4ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
 const vec4 colortex6ClearColor = vec4(0.5, 0.5, 0.5, 1.0);
 
 const int shadowMapResolution = 2048;

@@ -95,7 +95,7 @@ bool readLightInfo(vec2 texcoord, out LightingInfo info) {
 	);
 
 	// Check if this fragment can be skipped
-	if (info.depth + info.tlDepth == 2.0) {
+	if (info.tlDepth == 1.0) {
 		return true;
 	}
 	

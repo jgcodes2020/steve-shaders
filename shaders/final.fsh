@@ -16,7 +16,7 @@ void main() {
 	color = texture(colortex0, texcoord);
 
 	// Reinhard-Jodie tonemap
-	color.rgb = reinhardJodie(color.rgb);
+	// color.rgb = reinhardJodie(color.rgb);
 	// inverse gamma correction
 	color.rgb = pow(color.rgb, vec3(SRGB_GAMMA_INV));	
 }
