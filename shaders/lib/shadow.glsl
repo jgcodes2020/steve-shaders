@@ -5,8 +5,7 @@
 
 const float SHADOW_DISTORTION = 0.1;
 
-const float SHADOW_MID_THRESH = 0.4;
-const float SHADOW_FAR_THRESH = 0.95;
+const float SHADOW_FAR_THRESH = 0.4;
 
 // Distorts positions in shadow space to enlarge shadows near the player
 vec3 shadowDistort(vec3 clipPos) {
@@ -30,78 +29,102 @@ vec3 shadowDistort(vec3 clipPos) {
   return clipPos;
 }
 
+vec4[4] shadowBilinearKernel(vec2 texcoord) {
+	// Kernel:
+	// fc1.x * fc0.y, fc0.y,         fc0.y,         fc0.x * fc0.y,
+	// fc1.x,         1.0,           1.0,           fc0.x,
+	// fc1.x,         1.0,           1.0,           fc0.x,
+	// fc1.x * fc1.y, fc1.y,         fc1.y,         fc0.x * fc1.y,
+	// textureGather order:
+	// x y
+	// w z
+	// Factors are grouped by quadrant, since GPUs are much better
+	// at sampling in 2x2 chunks.
+	vec2 fc0 = fract(texcoord * float(shadowMapResolution) - 0.5);
+	vec2 fc1 = vec2(1.0) - fc0;
+	return vec4[](
+		vec4(fc1.x * fc0.y, fc0.y, 1.0, fc1.x),
+		vec4(fc0.y, fc0.x * fc0.y, fc0.x, 1.0),
+		vec4(1.0, fc0.x, fc0.x * fc1.y, fc1.y),
+		vec4(fc1.x, 1.0, fc1.y, fc1.x * fc1.y)
+	);
+}
+
+// Samples a shadow texture using a precomputed bilinear kernel.
+// Kernel weights are expected to add to 9.
+float texture4x4Kernel(sampler2DShadow t, vec3 texcoord, vec4[4] kernel) {
+	const ivec2[4] offsets = ivec2[](
+		ivec2(-1, +1),
+		ivec2(+1, +1),
+		ivec2(+1, -1),
+		ivec2(-1, -1)
+	);
+	vec4 accum = vec4(0.0);
+	accum += textureGatherOffset(t, texcoord.xy, texcoord.z, offsets[0]) * kernel[0];
+	accum += textureGatherOffset(t, texcoord.xy, texcoord.z, offsets[1]) * kernel[1];
+	accum += textureGatherOffset(t, texcoord.xy, texcoord.z, offsets[2]) * kernel[2];
+	accum += textureGatherOffset(t, texcoord.xy, texcoord.z, offsets[3]) * kernel[3];
+	return dot(accum, vec4(1.0 / 9.0));
+}
+// Samples the alpha component of a texture using a precomputed bilinear kernel.
+// Kernel weights are expected to add to 9.
+float texture4x4Kernel_a(sampler2D t, vec2 texcoord, vec4[4] kernel) {
+	const ivec2[4] offsets = ivec2[](
+		ivec2(-1, +1),
+		ivec2(+1, +1),
+		ivec2(+1, -1),
+		ivec2(-1, -1)
+	);
+	vec4 accum = vec4(0.0);
+	accum += textureGatherOffset(t, texcoord, offsets[0], 3) * kernel[0];
+	accum += textureGatherOffset(t, texcoord, offsets[1], 3) * kernel[1];
+	accum += textureGatherOffset(t, texcoord, offsets[2], 3) * kernel[2];
+	accum += textureGatherOffset(t, texcoord, offsets[3], 3) * kernel[3];
+	return dot(accum, vec4(1.0 / 9.0));
+}
+
 // SOFT SHADOWS
 // ===============================================
 // This is pretty much a vectorized version of PCF. It does suffer from
 // being pixelated.
 
 float computeShadowSoft(vec3 shadowScreenPos) {
-	float norm = length((shadowScreenPos.xy - 0.5) * 2.0);
+	float norm = l4norm((shadowScreenPos.xy - 0.5) * 2.0);
 	// box blur kernel
-	#define GATHER_OFFSET(x, y) \
-		do { \
-			vec4 test = textureGatherOffset(shadowtex1, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
-			vec4 tlTest = textureGatherOffset(shadowtex0, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
-			vec4 alpha = textureGatherOffset(shadowcolor0, shadowScreenPos.xy, ivec2(x, y), 3); \
-			accum += max(tlTest, max(test - alpha, vec4(0.0))); \
-		} while (false)
 
-	if (norm < SHADOW_MID_THRESH) {
-		// 4x4 PCF
-		vec4 accum = vec4(0.0);
-		GATHER_OFFSET(-1, -1);
-		GATHER_OFFSET(-1, +1);
-		GATHER_OFFSET(+1, -1);
-		GATHER_OFFSET(+1, +1);
-		return dot(accum, vec4(1.0 / 16.0));
-	}
-	else if (norm < SHADOW_FAR_THRESH) {
-		// 2x2 PCF
-		vec4 accum = vec4(0.0);
-		GATHER_OFFSET(0, 0);
-		return dot(accum, vec4(1.0 / 4.0));
+	if (true) {
+		// 4x4 bilinear PCF
+		vec4[4] kernel = shadowBilinearKernel(shadowScreenPos.xy);
+		float test = texture4x4Kernel(shadowtex1, shadowScreenPos, kernel);
+		float tlTest = texture4x4Kernel(shadowtex0, shadowScreenPos, kernel);
+		float alpha = texture4x4Kernel_a(shadowcolor0, shadowScreenPos.xy, kernel);
+		return max(tlTest, max(test - alpha, 0.0));
 	}
 	else {
-		// Interpolated texture sample
+		// 2x2 PCF (built into GPU sampling)
 		float test = texture(shadowtex1, shadowScreenPos);
 		float tlTest = texture(shadowtex0, shadowScreenPos);
 		float alpha = texture(shadowcolor0, shadowScreenPos.xy).a;
 
 		return max(tlTest, max(test - alpha, 0.0));
 	}
-
-	#undef GATHER_OFFSET
 }
 
 float tlComputeShadowSoft(vec3 shadowScreenPos, float alpha) {
 	vec4 accum = vec4(0.0);
-	float norm = l4norm(shadowScreenPos.xy);
-	
-	#define GATHER_OFFSET(x, y) \
-		do { \
-			vec4 tlTest = textureGatherOffset(shadowtex0, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
-			accum += mix(vec4(1.0 - alpha), vec4(1.0), equal(tlTest, vec4(1.0))); \
-		} while (false)
+	float norm = l4norm((shadowScreenPos.xy - 0.5) * 2.0);
 
-	if (norm < SHADOW_MID_THRESH) {
-		vec4 accum = vec4(0.0);
-		GATHER_OFFSET(-1, -1);
-		GATHER_OFFSET(-1, +1);
-		GATHER_OFFSET(+1, -1);
-		GATHER_OFFSET(+1, +1);
-		return dot(accum, vec4(1.0 / 16.0));
-	}
-	else if (norm < SHADOW_FAR_THRESH) {
-		vec4 accum = vec4(0.0);
-		GATHER_OFFSET(0, 0);
-		return dot(accum, vec4(1.0 / 4.0));
+	if (norm < SHADOW_FAR_THRESH) {
+		// 2x2 PCF
+		vec4[4] kernel = shadowBilinearKernel(shadowScreenPos.xy);
+		float tlTest = texture4x4Kernel(shadowtex0, shadowScreenPos, kernel);
+		return max(tlTest, 1.0 - alpha);
 	}
 	else {
+		// 2x2 PCF
 		float tlTest = texture(shadowtex0, shadowScreenPos);
-		return (tlTest == 1.0) ? 1.0 : 1.0 - alpha;
+		return max(tlTest, 1.0 - alpha);
 	}
-
-	#undef GATHER_OFFSET
 }
 
 #endif
