@@ -142,7 +142,7 @@ void diffuseLighting(vec2 texcoord, inout LightingInfo info) {
 
 	if (info.depth < 1.0) {
 		vec3 skyLight = skyLightColor * clamp(dot(lightDir, info.normal), 0.0, 1.0);
-		vec3 skyTotal = skyAmbientColor * info.lightmap.g + skyLight * shadow;
+		vec3 skyTotal = (skyAmbientColor + skyLight * shadow) * info.lightmap.g;
 		vec3 blockTotal = blockLightColor * info.lightmap.r;
 
 		info.color.rgb *= (skyTotal + blockTotal);
@@ -153,7 +153,7 @@ void diffuseLighting(vec2 texcoord, inout LightingInfo info) {
 
 	if (info.tlDepth < 1.0) {
 		vec3 tlSkyLight = skyLightColor * clamp(dot(lightDir, info.tlNormal), 0.0, 1.0);
-		vec3 tlSkyTotal = skyAmbientColor * info.tlLightmap.g + tlSkyLight * tlShadow;
+		vec3 tlSkyTotal = (skyAmbientColor + tlSkyLight * tlShadow) * info.tlLightmap.g;
 		vec3 tlBlockTotal = blockLightColor * info.tlLightmap.r;
 
 		info.tlColor.rgb *= (tlSkyTotal + tlBlockTotal);
