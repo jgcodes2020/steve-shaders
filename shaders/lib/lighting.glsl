@@ -9,9 +9,9 @@ const vec3 blockLightColor = vec3(0.974, 0.974, 0.737);
 const vec3 ambientColor = vec3(0.1);
 
 const vec3 dayLightColor = vec3(1.0, 1.0, 1.0);
-const vec3 nightLightColor = vec3(0.02, 0.05, 0.1);
-
 const vec3 dayAmbientColor = vec3(0.15, 0.15, 0.15);
+
+const vec3 nightLightColor = vec3(0.02, 0.05, 0.1);
 const vec3 nightAmbientColor = vec3(0.05, 0.05, 0.05);
 
 // Angle cosines relative to the horizon where full
@@ -27,8 +27,6 @@ const float nightSatAngle = -0.173648;
 // -> night: sun is ~10 degrees below horizon (theta = 100)
 // -> day: sun is ~25 degrees above horizon (theta = 75)
 
-const float SHADOW_MID_THRESH = 0.4;
-const float SHADOW_FAR_THRESH = 0.95;
 
 // SHADOW-SPACE TRANSFORMATIONS
 // ===============================================
@@ -96,7 +94,6 @@ bool readLightInfo(vec2 texcoord, out LightingInfo info) {
 
 	// Check if this fragment can be skipped
 	if (info.depth + info.tlDepth == 2.0) {
-		color = info.color;
 		return true;
 	}
 	
@@ -109,7 +106,7 @@ bool readLightInfo(vec2 texcoord, out LightingInfo info) {
 	return false;
 }
 
-void diffuseLighting(inout LightingInfo info) {
+void diffuseLighting(vec2 texcoord, inout LightingInfo info) {
 	// SHADOW-SPACE CALCULATIONS
 	// ===============================================
 
@@ -161,86 +158,6 @@ void diffuseLighting(inout LightingInfo info) {
 
 		info.tlColor.rgb *= (tlSkyTotal + tlBlockTotal);
 	}
-}
-
-// SOFT SHADOWS
-// ===============================================
-// This is pretty much a vectorized version of PCF. It does suffer from
-// being pixelated.
-
-float computeShadowSoft(vec3 shadowScreenPos) {
-	float norm = length((shadowScreenPos.xy - 0.5) * 2.0);
-	// box blur kernel
-	#define GATHER_OFFSET(x, y) \
-		do { \
-			vec4 test = textureGatherOffset(shadowtex1, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
-			vec4 tlTest = textureGatherOffset(shadowtex0, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
-			vec4 alpha = textureGatherOffset(shadowcolor0, shadowScreenPos.xy, ivec2(x, y), 3); \
-			accum += max(tlTest, max(test - alpha, vec4(0.0))); \
-		} while (false)
-
-	if (norm < SHADOW_MID_THRESH) {
-		// 4x4 PCF
-		vec4 accum = vec4(0.0);
-		GATHER_OFFSET(-1, -1);
-		GATHER_OFFSET(-1, +1);
-		GATHER_OFFSET(+1, -1);
-		GATHER_OFFSET(+1, +1);
-		return dot(accum, vec4(1.0 / 16.0));
-	}
-	else if (norm < SHADOW_FAR_THRESH) {
-		// 2x2 PCF
-		vec4 accum = vec4(0.0);
-		GATHER_OFFSET(0, 0);
-		return dot(accum, vec4(1.0 / 4.0));
-	}
-	else {
-		// Interpolated texture sample
-		float test = texture(shadowtex1, shadowScreenPos);
-		float tlTest = texture(shadowtex0, shadowScreenPos);
-		float alpha = texture(shadowcolor0, shadowScreenPos.xy).a;
-
-		return max(tlTest, max(test - alpha, 0.0));
-	}
-
-	#undef GATHER_OFFSET
-}
-
-float tlComputeShadowSoft(vec3 shadowScreenPos, float alpha) {
-	vec4 accum = vec4(0.0);
-	float norm = l4norm(shadowScreenPos.xy);
-	
-	#define GATHER_OFFSET(x, y) \
-		do { \
-			vec4 tlTest = textureGatherOffset(shadowtex0, shadowScreenPos.xy, shadowScreenPos.z, ivec2(x, y)); \
-			accum += mix(vec4(1.0 - alpha), vec4(1.0), equal(tlTest, vec4(1.0))); \
-		} while (false)
-
-	if (norm < SHADOW_MID_THRESH) {
-		vec4 accum = vec4(0.0);
-		GATHER_OFFSET(-1, -1);
-		GATHER_OFFSET(-1, +1);
-		GATHER_OFFSET(+1, -1);
-		GATHER_OFFSET(+1, +1);
-		return dot(accum, vec4(1.0 / 16.0));
-	}
-	else if (norm < SHADOW_FAR_THRESH) {
-		vec4 accum = vec4(0.0);
-		GATHER_OFFSET(0, 0);
-		return dot(accum, vec4(1.0 / 4.0));
-	}
-	else {
-		float tlTest = texture(shadowtex0, shadowScreenPos);
-		return (tlTest == 1.0) ? 1.0 : 1.0 - alpha;
-	}
-
-	#undef GATHER_OFFSET
-}
-
-vec3 reinhardJodie(vec3 v) {
-	float l = dot(v, LUMA_COEFFS);
-	vec3 tv = v / (1.0 + v);
-	return mix(v / (1.0 + l), tv, tv);
 }
 
 

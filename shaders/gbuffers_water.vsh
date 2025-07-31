@@ -5,8 +5,6 @@ out vec2 texcoord;
 out vec4 glcolor;
 out vec3 normal;
 
-uniform mat4 gbufferModelViewInverse; // view -> world
-
 #include "/lib/util.glsl"
 
 void main() {
