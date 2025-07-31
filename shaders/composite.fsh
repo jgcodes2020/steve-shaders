@@ -51,12 +51,14 @@ void main() {
 	vec3 skyLightColor = dayFactor * dayLightColor + nightFactor * nightLightColor;
 	vec3 skyAmbientColor = dayFactor * dayAmbientColor + nightFactor * nightAmbientColor;
 
+	skyAmbientColor = mix(skyAmbientColor, nightVisionAmbientColor, nightVision);
+
 	// OPAQUE LIGHTING
 	// ===============================================
 
 	if (info.depth < 1.0) {
 		vec3 skyLight = skyLightColor * clamp(dot(lightDir, info.normal), 0.0, 1.0);
-		vec3 skyTotal = (skyAmbientColor + skyLight * shadow) * info.lightmap.g;
+		vec3 skyTotal = (skyAmbientColor + skyLight * shadow) * max(info.lightmap.g, nightVision);
 		vec3 blockTotal = blockLightColor * info.lightmap.r;
 
 		info.color.rgb *= (skyTotal + blockTotal);
@@ -67,12 +69,12 @@ void main() {
 
 	if (info.tlDepth < 1.0) {
 		vec3 tlSkyLight = skyLightColor * clamp(dot(lightDir, info.tlNormal), 0.0, 1.0);
-		vec3 tlSkyTotal = (skyAmbientColor + tlSkyLight * tlShadow) * info.tlLightmap.g;
+		vec3 tlSkyTotal = (skyAmbientColor + tlSkyLight * tlShadow) * max(info.tlLightmap.g, nightVision);
 		vec3 tlBlockTotal = blockLightColor * info.tlLightmap.r;
 
 		info.tlColor.rgb *= (tlSkyTotal + tlBlockTotal);
 	}
-	
+
 	// composite translucent onto colour
 	color.rgb = info.color.rgb * (1.0 - info.tlColor.a) + info.tlColor.rgb;
 }

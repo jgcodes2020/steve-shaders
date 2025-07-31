@@ -14,6 +14,8 @@ const vec3 dayAmbientColor = vec3(0.15, 0.15, 0.15);
 const vec3 nightLightColor = vec3(0.02, 0.05, 0.1);
 const vec3 nightAmbientColor = vec3(0.05, 0.05, 0.05);
 
+const vec3 nightVisionAmbientColor = vec3(0.5, 0.5, 0.5);
+
 // Angle cosines relative to the horizon where full
 // brightness should be achieved.
 // sin(25)  ~  0.258819
@@ -104,60 +106,6 @@ bool readLightInfo(vec2 texcoord, out LightingInfo info) {
 	info.tlColor.rgb = pow(info.tlColor.rgb, vec3(SRGB_GAMMA));
 	info.tlLightmap.rg = pow(info.tlLightmap.rg, vec2(SRGB_GAMMA));
 	return false;
-}
-
-void diffuseLighting(vec2 texcoord, inout LightingInfo info) {
-	// SHADOW-SPACE CALCULATIONS
-	// ===============================================
-
-	// vector to sunlight
-	vec3 lightDir = txLinear(
-		gbufferModelViewInverse, 
-		normalize(shadowLightPosition)
-	);
-
-	vec3 shadowPos = screenToShadowScreen(vec3(texcoord, info.depth), info.normal);
-	float shadow = computeShadowSoft(shadowPos);
-	if ((info.lightFlags & LTG_NO_SHADOW) != 0) {
-		shadow = 1.0;
-	}
-
-	vec3 tlShadowPos = screenToShadowScreen(vec3(texcoord, info.tlDepth), info.tlNormal);
-	float tlShadow = tlComputeShadowSoft(tlShadowPos, info.tlColor.a);
-	if ((info.tlLightFlags & LTG_NO_SHADOW) != 0) {
-		tlShadow = 1.0;
-	}
-
-	// LIGHTING CONSTANTS
-	// ===============================================
-
-	float cosSunToUp = dot(normalize(sunPosition), gbufferModelView[1].xyz);
-	float dayFactor = horizonStep(cosSunToUp, daySatAngle);
-	float nightFactor = horizonStep(cosSunToUp, nightSatAngle);
-	vec3 skyLightColor = dayFactor * dayLightColor + nightFactor * nightLightColor;
-	vec3 skyAmbientColor = dayFactor * dayAmbientColor + nightFactor * nightAmbientColor;
-
-	// OPAQUE LIGHTING
-	// ===============================================
-
-	if (info.depth < 1.0) {
-		vec3 skyLight = skyLightColor * clamp(dot(lightDir, info.normal), 0.0, 1.0);
-		vec3 skyTotal = (skyAmbientColor + skyLight * shadow) * info.lightmap.g;
-		vec3 blockTotal = blockLightColor * info.lightmap.r;
-
-		info.color.rgb *= (skyTotal + blockTotal);
-	}
-
-	// TRANSLUCENT LIGHTING
-	// ===============================================
-
-	if (info.tlDepth < 1.0) {
-		vec3 tlSkyLight = skyLightColor * clamp(dot(lightDir, info.tlNormal), 0.0, 1.0);
-		vec3 tlSkyTotal = (skyAmbientColor + tlSkyLight * tlShadow) * info.tlLightmap.g;
-		vec3 tlBlockTotal = blockLightColor * info.tlLightmap.r;
-
-		info.tlColor.rgb *= (tlSkyTotal + tlBlockTotal);
-	}
 }
 
 

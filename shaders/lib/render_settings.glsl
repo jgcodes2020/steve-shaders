@@ -2,10 +2,10 @@
 #define RENDER_SETTINGS_GLSL_INCLUDED
 
 /*
-const int colortex0Format = RGBF16;
+const int colortex0Format = RGB16F;
 const int colortex1Format = RGB8;
 const int colortex2Format = RGB8;
-const int colortex4Format = RGBAF16;
+const int colortex4Format = RGBA16F;
 const int colortex5Format = RGB8;
 const int colortex6Format = RGB8;
 */
