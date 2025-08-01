@@ -29,5 +29,9 @@ uniform float nightVision; // multiplier for night vision effect
 
 uniform int renderStage; // render stage
 uniform vec3 skyColor;   // sky color
+uniform vec3 fogColor;   // horizon fog color
+
+uniform float viewWidth;  // viewport width
+uniform float viewHeight; // viewport height
 
 #endif
