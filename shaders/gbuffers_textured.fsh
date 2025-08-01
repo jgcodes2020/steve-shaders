@@ -1,4 +1,4 @@
-#version 330 compatibility
+#version 410 compatibility
 
 uniform sampler2D lightmap;
 uniform sampler2D gtexture;
@@ -16,14 +16,13 @@ layout(location = 2) out vec4 normInfo;
 
 #include "/lib/util.glsl"
 
-
 void main() {
-	color = texture(gtexture, texcoord) * glcolor;
-	// color *= texture(lightmap, lmcoord);
-	if (color.a < alphaTestRef) {
-		discard;
-	}
+  color = texture(gtexture, texcoord) * glcolor;
+  // color *= texture(lightmap, lmcoord);
+  if (color.a < alphaTestRef) {
+    discard;
+  }
 
-	lightInfo = vec4(lmcoord, 0.0, 1.0);
-	normInfo = COL_NORMAL_NONE;
+  lightInfo = vec4(lmcoord, 0.0, 1.0);
+  normInfo = COL_NORMAL_NONE;
 }

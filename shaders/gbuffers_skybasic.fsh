@@ -1,10 +1,9 @@
-#version 330 compatibility
+#version 410 compatibility
 
 uniform sampler2D lightmap;
 
 uniform float alphaTestRef = 0.1;
 
-in vec2 lmcoord;
 in vec4 glcolor;
 
 /* RENDERTARGETS: 0,1,2 */
@@ -15,8 +14,13 @@ layout(location = 2) out vec4 normInfo;
 #include "/lib/util.glsl"
 
 void main() {
-	color.rgb = skyColor;
+  if (renderStage == MC_RENDER_STAGE_STARS) {
+    color = glcolor;
+    return;
+  }
 
-	lightInfo = vec4(lmcoord, 0.0, 1.0);
-	normInfo = COL_NORMAL_NONE;
+  color.rgb = skyColor * 1.2;
+
+  lightInfo = vec4(0.0, 0.0, 0.0, 1.0);
+  normInfo = COL_NORMAL_NONE;
 }

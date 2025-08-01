@@ -3,7 +3,6 @@
 uniform sampler2D gtexture;
 
 uniform float alphaTestRef = 0.1;
-uniform int renderStage;
 
 in vec2 texcoord;
 in vec4 glcolor;

@@ -18,15 +18,15 @@ layout(location = 2) out vec4 normInfo;
 #include "/lib/util.glsl"
 
 void main() {
-	color = texture(gtexture, texcoord) * glcolor;
-	if (color.a < alphaTestRef) {
-		discard;
-	}
-	// premultiply alpha
-	color.rgb *= color.a;
+  color = texture(gtexture, texcoord) * glcolor;
+  if (color.a < alphaTestRef) {
+    discard;
+  }
+  // premultiply alpha
+  color.rgb *= color.a;
 
-	uint lightFlags = LTG_NO_SHADOW;
+  uint lightFlags = LTG_NO_SHADOW;
 
-	lightInfo = vec4(lmcoord, flagsToColor(lightFlags), 1.0);
-	normInfo = normalToColor(normal);
+  lightInfo = vec4(lmcoord, flagsToColor(lightFlags), 1.0);
+  normInfo = normalToColor(normal);
 }
