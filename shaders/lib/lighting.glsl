@@ -32,33 +32,6 @@ const float nightSatAngle = -0.173648;
 // SHADOW-SPACE TRANSFORMATIONS
 // ===============================================
 
-vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
-  // project the normal into shadow space.
-  vec3 shadowNormal =
-      mat3(shadowProjection) * (mat3(shadowModelView) * worldNormal);
-  // Multiply by the inverse of the distortion factor. This is an idea inspired
-  // by Complementary, but adapted to my own shader.
-  shadowNormal = shadowNormal * (DISTORT_A + length(clipPos.xy)) /
-                 (DISTORT_A + 1);
-  return shadowNormal;
-}
-
-vec3 screenToShadowScreen(vec3 screenPos, vec3 normal) {
-  // Convert screen space to shadow view space
-  vec3 ndcPos = screenPos * 2.0 - 1.0;
-  vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);
-  vec3 feetPlayerPos = txAffine(gbufferModelViewInverse, viewPos);
-  vec3 shadowViewPos = txAffine(shadowModelView, feetPlayerPos);
-
-  // Convert to shadow clip space, adjust coordinates
-  vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
-  shadowClipPos.xyz += shadowBias(shadowClipPos.xyz, normal); // shadow bias
-  shadowClipPos.xyz = shadowDistort(shadowClipPos.xyz); // shadow distortion
-
-  // Do perspective divide, convert to screen-space
-  vec3 shadowNdcPos = shadowClipPos.xyz / shadowClipPos.w;
-  return shadowNdcPos * 0.5 + 0.5;
-}
 
 // LIGHTING MODEL
 // ===============================================

@@ -34,10 +34,11 @@ vec3 shadowDistort(vec3 clipPos) {
 // Computes the diagonal entries of the Jacobian of the distortion function.
 // i.e. (du/dx), (dv/dy). This gives an approximate scaling for the box kernel.
 vec2 distortJacobianDiag(vec2 clipPos) {
-  // Partial derivative (wrt. x):
+  // Expression for du/dx:
   //   (a + 1) * [a * (x^4 + y^4)^(3/4) + y^4]
   // -------------------------------------------
   // (x^4 + y^4)^(3/4) * [a + (x^4 + y^4)^(1/4)]
+  // this is kinda expensive to compute so I'm gonna cheap out
 
   vec2 posP2 = clipPos * clipPos;
   vec2 posP4 = posP2 * posP2;
@@ -52,23 +53,34 @@ vec2 distortJacobianDiag(vec2 clipPos) {
   return numer / denom;
 }
 
-vec4[4] shadowBilinearKernel(vec2 texcoord) {
-  // Kernel:
-  // fc1.x * fc0.y, fc0.y,         fc0.y,         fc0.x * fc0.y,
-  // fc1.x,         1.0,           1.0,           fc0.x,
-  // fc1.x,         1.0,           1.0,           fc0.x,
-  // fc1.x * fc1.y, fc1.y,         fc1.y,         fc0.x * fc1.y,
-  // textureGather order:
-  // x y
-  // w z
-  // Factors are grouped by quadrant, since GPUs are much better
-  // at sampling in 2x2 chunks.
-  vec2 fc0 = fract(texcoord * float(shadowMapResolution) - 0.5);
-  vec2 fc1 = vec2(1.0) - fc0;
-  return vec4[](vec4(fc1.x * fc0.y, fc0.y, 1.0, fc1.x),
-                vec4(fc0.y, fc0.x * fc0.y, fc0.x, 1.0),
-                vec4(1.0, fc0.x, fc0.x * fc1.y, fc1.y),
-                vec4(fc1.x, 1.0, fc1.y, fc1.x * fc1.y));
+vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
+  // project the normal into shadow space.
+  vec3 shadowNormal =
+      mat3(shadowProjection) * (mat3(shadowModelView) * worldNormal);
+  // Multiply by the inverse of the distortion factor. This is an idea inspired
+  // by Complementary, but adapted to my own shader.
+  shadowNormal = shadowNormal * (DISTORT_A + length(clipPos.xy)) /
+                 (DISTORT_A + 1);
+  return shadowNormal;
+}
+
+vec3 screenToShadowScreen(vec3 screenPos, vec3 normal, out vec3 clipPos) {
+  // Convert screen space to shadow view space
+  vec3 ndcPos = screenPos * 2.0 - 1.0;
+  vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);
+  vec3 feetPlayerPos = txAffine(gbufferModelViewInverse, viewPos);
+  vec3 shadowViewPos = txAffine(shadowModelView, feetPlayerPos);
+
+  // Convert to shadow clip space, adjust coordinates
+  vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
+  shadowClipPos.xyz += shadowBias(shadowClipPos.xyz, normal); // shadow bias
+  clipPos = shadowClipPos.xyz / shadowClipPos.w;
+
+  shadowClipPos.xyz = shadowDistort(shadowClipPos.xyz); // shadow distortion
+
+  // Do perspective divide, convert to screen-space
+  vec3 shadowNdcPos = shadowClipPos.xyz / shadowClipPos.w;
+  return shadowNdcPos * 0.5 + 0.5;
 }
 
 vec4[4] boxKernel(vec2 texcoord, vec2 radius) {
@@ -124,10 +136,9 @@ float texture4x4Kernel_a(sampler2D t, vec2 texcoord, vec4[4] kernel, float rcpSu
 // This is pretty much a vectorized version of PCF. It does suffer from
 // being pixelated.
 
-float computeShadowSoft(vec3 shadowScreenPos) {
-  vec2 clipXY = (shadowScreenPos.xy - 0.5) * 2.0;
-
-  vec2 radiusScale = distortJacobianDiag(clipXY) / DISTORT_DU0_DX;
+float computeShadowSoft(vec3 shadowScreenPos, vec2 clipPosXY) {
+  
+  vec2 radiusScale = distortJacobianDiag(clipPosXY) / DISTORT_DU0_DX;
   vec2 radius = clamp(radiusScale * SHADOW_RADIUS_SCALE, SHADOW_MIN_RADIUS, SHADOW_MAX_RADIUS);
   float rcpSum = 1 / (2.0 * radius.x * radius.y);
 
@@ -138,7 +149,7 @@ float computeShadowSoft(vec3 shadowScreenPos) {
   return max(tlTest, max(test - alpha, 0.0));
 }
 
-float tlComputeShadowSoft(vec3 shadowScreenPos, float alpha) {
+float tlComputeShadowSoft(vec3 shadowScreenPos, vec2 clipPosXY, float alpha) {
   vec2 clipXY = (shadowScreenPos.xy - 0.5) * 2.0;
 
   vec2 radiusScale = distortJacobianDiag(clipXY) / DISTORT_DU0_DX;
