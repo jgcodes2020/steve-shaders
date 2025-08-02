@@ -1,6 +1,7 @@
 #ifndef UTIL_GLSL_INCLUDED
 #define UTIL_GLSL_INCLUDED
 
+#include "/lib/settings.glsl"
 #include "/lib/render_settings.glsl"
 #include "/lib/uniforms.glsl"
 

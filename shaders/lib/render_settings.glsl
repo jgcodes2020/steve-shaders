@@ -7,9 +7,9 @@ const int colortex1Format = RGB8;
 const int colortex2Format = RGB8;
 */
 
-// const bool shadowcolor0Nearest = true;
-// const bool shadowtex0Nearest = true;
-// const bool shadowtex1Nearest = true;
+const bool shadowcolor0Nearest = true;
+const bool shadowtex0Nearest = true;
+const bool shadowtex1Nearest = true;
 
 const vec4 colortex2ClearColor = vec4(0.5, 0.5, 0.5, 1.0);
 

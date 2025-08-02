@@ -28,10 +28,8 @@ void main() {
       txLinear(gbufferModelViewInverse, normalize(shadowLightPosition));
 
   // shadow calculation
-  vec3 shadowClipPos;
-  vec3 shadowPos =
-      screenToShadowScreen(vec3(texcoord, info.depth), info.normal, shadowClipPos);
-  float shadow = computeShadowSoft(shadowPos, shadowClipPos.xy);
+  vec4 shadowClipPos = screenToShadowClip(vec3(texcoord, info.depth));
+  float shadow = computeShadowSoft(shadowClipPos, info.normal);
   if ((info.lightFlags & LTG_NO_SHADOW) != 0) {
     shadow = 1.0;
   }
