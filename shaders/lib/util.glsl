@@ -42,7 +42,7 @@ vec3 txLinear(mat4 matrix, vec3 position) { return mat3(matrix) * position; }
 // WEIRD MATH FUNCTIONS
 // ===============================================
 
-// Ease-out transition between 0 and the saturation point.
+// Quadratic ease out between 0 and satPoint.
 float horizonStep(float cosSunToUp, float satPoint) {
   float x = clamp(cosSunToUp / satPoint, 0.0, 1.0);
   // quadratic ease-out

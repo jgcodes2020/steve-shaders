@@ -38,8 +38,8 @@ vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
       mat3(shadowProjection) * (mat3(shadowModelView) * worldNormal);
   // Multiply by the inverse of the distortion factor. This is an idea inspired
   // by Complementary, but adapted to my own shader.
-  shadowNormal = shadowNormal * (SHADOW_DISTORTION + length(clipPos.xy)) /
-                 (SHADOW_DISTORTION + 1);
+  shadowNormal = shadowNormal * (DISTORT_A + length(clipPos.xy)) /
+                 (DISTORT_A + 1);
   return shadowNormal;
 }
 
@@ -94,18 +94,13 @@ bool readLightInfo(vec2 texcoord, out LightingInfo info) {
                       texture(depthtex0, texcoord).r               // tlDepth
   );
 
-  // Check if this fragment can be skipped
-  if (info.tlDepth == 1.0) {
-    return true;
-  }
-
   // gamma corection
   info.color.rgb = pow(info.color.rgb, vec3(SRGB_GAMMA));
   info.lightmap.rg = pow(info.lightmap.rg, vec2(SRGB_GAMMA));
 
   info.tlColor.rgb = pow(info.tlColor.rgb, vec3(SRGB_GAMMA));
   info.tlLightmap.rg = pow(info.tlLightmap.rg, vec2(SRGB_GAMMA));
-  return false;
+  return info.tlDepth == 1.0;
 }
 
 #endif
