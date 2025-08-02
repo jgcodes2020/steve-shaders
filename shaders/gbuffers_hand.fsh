@@ -5,7 +5,7 @@ uniform sampler2D gtexture;
 
 uniform float alphaTestRef = 0.1;
 
-in vec2 lmcoord;
+in vec2 vtlight;
 in vec2 texcoord;
 in vec4 glcolor;
 in vec3 normal;
@@ -25,6 +25,6 @@ void main() {
 
   uint lightFlags = LTG_NO_SHADOW;
 
-  lightInfo = vec4(lmcoord, flagsToColor(lightFlags), 1.0);
+  lightInfo = vec4(vtlight, flagsToColor(lightFlags), 1.0);
   normInfo = normalToColor(normal);
 }

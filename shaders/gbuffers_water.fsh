@@ -5,12 +5,12 @@ uniform sampler2D gtexture;
 
 uniform float alphaTestRef = 0.1;
 
-in vec2 lmcoord;
+in vec2 vtlight;
 in vec2 texcoord;
 in vec4 glcolor;
 in vec3 normal;
 
-/* RENDERTARGETS: 4,5,6 */
+/* RENDERTARGETS: 0,1,2 */
 layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 lightInfo;
 layout(location = 2) out vec4 normInfo;
@@ -22,9 +22,10 @@ void main() {
   if (color.a < alphaTestRef) {
     discard;
   }
-  // premultiply alpha
-  color.rgb *= color.a;
 
-  lightInfo = vec4(lmcoord, 0.0, 1.0);
+  color.rgb = pow(color.rgb, vec3(SRGB_GAMMA));
+  vec2 light = pow(vtlight, vec2(SRGB_GAMMA));
+  
+  lightInfo = vec4(light, 0.0, 1.0);
   normInfo = normalToColor(normal);
 }

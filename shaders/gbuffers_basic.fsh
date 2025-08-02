@@ -4,7 +4,7 @@ uniform sampler2D lightmap;
 
 uniform float alphaTestRef = 0.1;
 
-in vec2 lmcoord;
+in vec2 vtlight;
 in vec4 glcolor;
 
 /* RENDERTARGETS: 0,1,2 */
@@ -20,6 +20,6 @@ void main() {
     discard;
   }
 
-  lightInfo = vec4(lmcoord, 0.0, 1.0);
+  lightInfo = vec4(vtlight, 0.0, 1.0);
   normInfo = COL_NORMAL_NONE;
 }

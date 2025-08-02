@@ -5,7 +5,7 @@ uniform sampler2D gtexture;
 
 uniform float alphaTestRef = 0.1;
 
-in vec2 lmcoord;
+in vec2 vtlight;
 in vec2 texcoord;
 in vec4 glcolor;
 
@@ -18,11 +18,11 @@ layout(location = 2) out vec4 normInfo;
 
 void main() {
   color = texture(gtexture, texcoord) * glcolor;
-  // color *= texture(lightmap, lmcoord);
+  // color *= texture(lightmap, vtlight);
   if (color.a < alphaTestRef) {
     discard;
   }
 
-  lightInfo = vec4(lmcoord, 0.0, 1.0);
+  lightInfo = vec4(vtlight, 0.0, 1.0);
   normInfo = COL_NORMAL_NONE;
 }

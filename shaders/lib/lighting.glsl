@@ -38,42 +38,28 @@ const float nightSatAngle = -0.173648;
 
 struct LightingInfo {
   vec4 color;
-  vec2 lightmap;
+  vec2 light;
   uint lightFlags;
   vec3 normal;
   float depth;
-
-  vec4 tlColor;
-  vec2 tlLightmap;
-  uint tlLightFlags;
-  vec3 tlNormal;
-  float tlDepth;
 };
 
 bool readLightInfo(vec2 texcoord, out LightingInfo info) {
   // Fetch data values
   vec4 color1Sample = texture(colortex1, texcoord);
-  vec4 color5Sample = texture(colortex5, texcoord);
 
   info = LightingInfo(texture(colortex0, texcoord),                // color
-                      color1Sample.rg,                             // lightmap
+                      color1Sample.rg,                             // light
                       colorToFlags(color1Sample.b),                // lightFlags
                       colorToNormal(texture(colortex2, texcoord)), // normal
-                      texture(depthtex1, texcoord).r,              // depth
-                      texture(colortex4, texcoord),                // tlColor
-                      color5Sample.rg,                             // tlLightmap
-                      colorToFlags(color5Sample.b), // tlLightFlags
-                      colorToNormal(texture(colortex6, texcoord)), // tlNormal
-                      texture(depthtex0, texcoord).r               // tlDepth
+                      texture(depthtex1, texcoord).r               // depth
   );
 
   // gamma corection
   info.color.rgb = pow(info.color.rgb, vec3(SRGB_GAMMA));
-  info.lightmap.rg = pow(info.lightmap.rg, vec2(SRGB_GAMMA));
+  info.light.rg = pow(info.light.rg, vec2(SRGB_GAMMA));
 
-  info.tlColor.rgb = pow(info.tlColor.rgb, vec3(SRGB_GAMMA));
-  info.tlLightmap.rg = pow(info.tlLightmap.rg, vec2(SRGB_GAMMA));
-  return info.tlDepth == 1.0;
+  return info.depth == 1.0;
 }
 
 #endif
