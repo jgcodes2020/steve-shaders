@@ -9,6 +9,7 @@
 #include "/lib/util.glsl"
 
 in vec2 texcoord;
+layout(pixel_center_integer) in vec4 gl_FragCoord;
 
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 color;
@@ -29,7 +30,7 @@ void main() {
 
   // shadow calculation
   vec4 shadowClipPos = screenToShadowClip(vec3(texcoord, info.depth));
-  float shadow = computeShadowSoft(shadowClipPos, info.normal);
+  float shadow = computeShadowSoft(shadowClipPos, info.normal, ivec2(gl_FragCoord.xy));
   if ((info.lightFlags & LTG_NO_SHADOW) != 0) {
     shadow = 1.0;
   }

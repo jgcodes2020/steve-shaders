@@ -16,6 +16,8 @@ uniform sampler2DShadow shadowtex0; // shadow distance
 uniform sampler2DShadow shadowtex1; // shadow distance (opaque)
 uniform sampler2D shadowcolor0;     // shadow color
 
+uniform sampler2D noisetex; // noise
+
 uniform mat4 gbufferModelView;         // world -> view
 uniform mat4 gbufferProjectionInverse; // NDC -> view
 uniform mat4 gbufferModelViewInverse;  // view -> world

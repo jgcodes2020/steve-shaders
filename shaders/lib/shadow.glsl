@@ -31,26 +31,43 @@ vec3 shadowDistort(vec3 clipPos) {
 
   return clipPos;
 }
-// Computes the diagonal entries of the Jacobian of the distortion function.
-// i.e. (du/dx), (dv/dy). This gives an approximate scaling for the box kernel.
-vec2 distortJacobianDiag(vec2 clipPos) {
+
+// Distorts the shadow position in XY only.
+vec2 shadowDistortH(vec2 clipPos) {
+  float denom = l4norm(clipPos) + DISTORT_A;
+  return fma(clipPos, vec2(DISTORT_A), clipPos) / denom;
+}
+
+// Computes the Jacobian of the distortion function.
+// If we define the distorted coordinates as (u, v) and undistorted as (x, y),
+// this function compute (du/dx) and (dv/dy).
+mat2 distortJacobian(vec2 clipPos) {
   // Expression for du/dx:
   //   (a + 1) * [a * (x^4 + y^4)^(3/4) + y^4]
   // -------------------------------------------
   // (x^4 + y^4)^(3/4) * [a + (x^4 + y^4)^(1/4)]
-  // this is kinda expensive to compute so I'm gonna cheap out
+  // Expression for du/dy:
+  //              (a+1) * x * y^3
+  // -------------------------------------------
+  // (x^4 + y^4)^(3/4) * [a + (x^4 + y^4)^(1/4)]
+
 
   vec2 posP2 = clipPos * clipPos;
+  vec2 posP3 = posP2 * clipPos;
   vec2 posP4 = posP2 * posP2;
-  float sumP4 = dot(posP2, posP2);
+  float sumP4 = posP4.x + posP4.y;
 
   float sumP4Pow12 = sqrt(sumP4);
   float sumP4Pow14 = sqrt(sumP4Pow12);
   float sumP4Pow34 = sumP4Pow12 * sumP4Pow14;
 
-  vec2 numer = fma(vec2(DISTORT_A), vec2(sumP4Pow34), posP4) * (DISTORT_A + 1.0);
+  vec2 diagNumer = fma(vec2(DISTORT_A), vec2(sumP4Pow34), posP4.yx) * (DISTORT_A + 1.0);
+  vec2 offDiagNumer = posP3.yx * clipPos.xy * (DISTORT_A + 1.0);
   float denom = sumP4Pow34 * (DISTORT_A + sumP4Pow14);
-  return numer / denom;
+
+  vec2 diagEntries = diagNumer / denom;
+  vec2 offDiagEntries = offDiagNumer / denom;
+  return mat2(diagEntries.x, offDiagEntries.y, offDiagEntries.x, diagEntries.y);
 }
 
 vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
@@ -59,7 +76,7 @@ vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
       mat3(shadowProjection) * (mat3(shadowModelView) * worldNormal);
   // Multiply by the inverse of the distortion factor. This is an idea inspired
   // by Complementary, but adapted to my own shader.
-  shadowNormal = shadowNormal * (DISTORT_A + length(clipPos.xy)) /
+  shadowNormal = shadowNormal * (DISTORT_A + l4norm(clipPos.xy)) /
                  (DISTORT_A + 1);
   return shadowNormal;
 }
@@ -147,24 +164,6 @@ float texture4x4Kernel_a(sampler2D t, vec2 texcoord, vec4[4] kernel, float rcpSu
 // This is pretty much a vectorized version of PCF. It does suffer from
 // being pixelated.
 
-// calculus magic
-float computeShadowSoft(vec4 shadowClipPos, vec3 normal) {
-  vec2 radiusScale = distortJacobianDiag(shadowClipPos.xy) / DISTORT_DU0_DX;
-  vec2 radius = clamp(radiusScale * SHADOW_RADIUS_SCALE, SHADOW_MIN_RADIUS, SHADOW_MAX_RADIUS);
-  float rcpSum = 1 / (2.0 * radius.x * radius.y);
-
-  shadowClipPos.xyz += shadowBias(shadowClipPos.xyz, normal);
-  shadowClipPos.xyz = shadowDistort(shadowClipPos.xyz);
-  vec3 shadowNdcPos = shadowClipPos.xyz / shadowClipPos.w;
-  vec3 shadowScreenPos = shadowNdcPos * 0.5 + 0.5;
-
-  vec4[4] kernel = boxKernel(shadowScreenPos.xy, radius);
-  float test = texture4x4Kernel(shadowtex1, shadowScreenPos, kernel, rcpSum);
-  float tlTest = texture4x4Kernel(shadowtex0, shadowScreenPos, kernel, rcpSum);
-  float alpha = texture4x4Kernel_a(shadowcolor0, shadowScreenPos.xy, kernel, rcpSum);
-  return max(tlTest, max(test - alpha, 0.0));
-}
-
 float testShadow(vec3 shadowScreenPos) {
   float test = texture(shadowtex1, shadowScreenPos);
   float tlTest = texture(shadowtex0, shadowScreenPos);
@@ -173,41 +172,31 @@ float testShadow(vec3 shadowScreenPos) {
   return max(tlTest, max(test - alpha, 0.0));
 }
 
-// float computeShadowSoft(vec4 shadowClipPos, vec3 normal) {
-//   const int sampleCount = ST_SHADOW_SAMPLES * ST_SHADOW_SAMPLES * 4;
+float computeShadowSoft(vec4 shadowClipPos, vec3 normal, ivec2 pixelCoord) {
+  const int sampleCount = ST_SHADOW_SAMPLES * ST_SHADOW_SAMPLES * 4;
+  const float offsetMul = ST_SHADOW_RADIUS / (float(ST_SHADOW_SAMPLES) * shadowMapResolution);
 
-//   float accum = 0.0;
+  float theta = sampleNoise(pixelCoord).r * MF_TWO_PI;
+  mat2 rot = rotationMatrix(theta) * offsetMul;
 
-//   for (int x = -ST_SHADOW_SAMPLES; x < ST_SHADOW_SAMPLES; x++) {
-//     for (int y = -ST_SHADOW_SAMPLES; y < ST_SHADOW_SAMPLES; y++) {
-//       // compute offset, divide by shadow map resolution to put it in pixels
-//       vec2 offset = vec2(x, y) * ST_SHADOW_RADIUS / float(ST_SHADOW_SAMPLES);
-//       offset /= shadowMapResolution;
-//       // bias and distort the clip space position
-//       vec4 offsetShadowClipPos = shadowClipPos + vec4(offset, 0.0, 0.0);
-//       offsetShadowClipPos.xyz += shadowBias(offsetShadowClipPos.xyz, normal);
-//       offsetShadowClipPos.xyz = shadowDistort(offsetShadowClipPos.xyz);
-//       // convert to screen space
-//       vec3 shadowNdcPos = offsetShadowClipPos.xyz / offsetShadowClipPos.w;
-//       vec3 shadowScreenPos = shadowNdcPos * 0.5 + 0.5;
-//       // add the shadow test from this pixel
-//       accum += testShadow(shadowScreenPos);
-//     }
-//   }
+  float accum = 0.0;
+  for (int x = -ST_SHADOW_SAMPLES; x < ST_SHADOW_SAMPLES; x++) {
+    for (int y = -ST_SHADOW_SAMPLES; y < ST_SHADOW_SAMPLES; y++) {
+      // compute offset, divide by shadow map resolution to put it in pixels
+      vec2 offset = rot * vec2(x, y);
+      // bias and distort the clip space position
+      vec4 offsetShadowClipPos = shadowClipPos + vec4(offset, 0.0, 0.0);
+      offsetShadowClipPos.xyz += shadowBias(offsetShadowClipPos.xyz, normal);
+      offsetShadowClipPos.xyz = shadowDistort(offsetShadowClipPos.xyz);
+      // convert to screen space
+      vec3 shadowNdcPos = offsetShadowClipPos.xyz;
+      vec3 shadowScreenPos = fma(shadowNdcPos, vec3(0.5), vec3(0.5));
+      // add the shadow test from this pixel
+      accum += testShadow(shadowScreenPos);
+    }
+  }
 
-//   return accum / float(sampleCount);
-// }
-
-// float tlComputeShadowSoft(vec3 shadowScreenPos, vec2 clipPosXY, float alpha) {
-//   vec2 clipXY = (shadowScreenPos.xy - 0.5) * 2.0;
-
-//   vec2 radiusScale = distortJacobianDiag(clipXY) / DISTORT_DU0_DX;
-//   vec2 radius = clamp(radiusScale * SHADOW_RADIUS_SCALE, SHADOW_MIN_RADIUS, SHADOW_MAX_RADIUS);
-//   float rcpSum = 1 / (2.0 * radius.x * radius.y);
-
-//   vec4[4] kernel = boxKernel(shadowScreenPos.xy, radius);
-//   float tlTest = texture4x4Kernel(shadowtex0, shadowScreenPos, kernel, rcpSum);
-//   return max(tlTest, 1.0 - alpha);
-// }
+  return accum / float(sampleCount);
+}
 
 #endif

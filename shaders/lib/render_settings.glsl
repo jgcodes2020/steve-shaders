@@ -17,4 +17,6 @@ const int shadowMapResolution = 2048;
 const float shadowDistance = 160.0;
 const bool shadowHardwareFiltering = true;
 
+const int noiseTextureResolution = 256;
+
 #endif

@@ -40,6 +40,12 @@ vec3 txAffine(mat4 matrix, vec3 position) {
 // components.
 vec3 txLinear(mat4 matrix, vec3 position) { return mat3(matrix) * position; }
 
+mat2 rotationMatrix(float t) {
+  float cosT = cos(t);
+  float sinT = sin(t);
+  return mat2(cosT, sinT, -sinT, cosT);
+}
+
 // WEIRD MATH FUNCTIONS
 // ===============================================
 
@@ -64,6 +70,13 @@ vec3 reinhardJodie(vec3 v) {
   vec3 tv = v / (1.0 + v);
   return mix(v / (1.0 + l), tv, tv);
 }
+
+vec4 sampleNoise(ivec2 fragCoord) {
+  return texelFetch(noisetex, fragCoord % noiseTextureResolution, 0);
+}
+
+const float MF_TWO_PI = 6.2831853071;
+const float MF_PI = 3.1415926535;
 
 // ENCODING
 // ===============================================
