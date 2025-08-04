@@ -43,7 +43,7 @@ void main() {
   #else
   lightInfo = vec4(0.0, 0.0, lightFlagsCol, 1.0);
   #endif
-  
+
   #ifdef GBUFFERS_PASS_NORMAL
   normInfo  = normalToColor(normal);
   #else

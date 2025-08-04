@@ -73,7 +73,18 @@ void getSkyColors(out vec3 skyAmbientColor, out vec3 skyLightColor) {
   skyAmbientColor = mix(skyAmbientColor, nightVisionAmbientColor, nightVision);
 }
 
-vec3 computeLightMult(
+vec3 approxLightModel(
+  vec2 light, vec3 normal, vec3 lightDir, float shadow, vec3 skyAmbientColor,
+  vec3 skyLightColor) {
+  vec3 skyLight = skyLightColor;
+  vec3 skyTotal =
+    (skyAmbientColor + skyLight * shadow) * max(light.g, nightVision);
+  vec3 blockTotal = blockLightColor * light.r;
+  
+  return skyTotal + blockTotal;
+}
+
+vec3 diffuseLightModel(
   vec2 light, vec3 normal, vec3 lightDir, float shadow, vec3 skyAmbientColor,
   vec3 skyLightColor) {
   vec3 skyLight = skyLightColor * clamp(dot(lightDir, normal), 0.0, 1.0);
@@ -81,7 +92,7 @@ vec3 computeLightMult(
     (skyAmbientColor + skyLight * shadow) * max(light.g, nightVision);
   vec3 blockTotal = blockLightColor * light.r;
 
-  return (skyTotal + blockTotal);
+  return skyTotal + blockTotal;
 }
 
 #endif

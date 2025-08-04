@@ -3,4 +3,4 @@
 #define GBUFFERS_USE_TEXTURE
 #define GBUFFERS_PASS_LIGHT
 #define GBUFFERS_PASS_NORMAL
-#include "/program/gbuffers_deferred.vsh"
+#include "/program/gbuffers_deferred.fsh"

@@ -45,7 +45,7 @@ void main() {
   // OPAQUE LIGHTING
   // ===============================================
 
-  vec3 lightMult = computeLightMult(
+  vec3 lightMult = diffuseLightModel(
     info.light, info.normal, lightDir, shadow, skyAmbientColor, skyLightColor);
   if (info.depth < 1.0) {
     info.color.rgb *= lightMult;

@@ -25,11 +25,11 @@ void main() {
   color.rgb  = pow(color.rgb, vec3(SRGB_GAMMA));
   vec2 light = pow(vtlight, vec2(SRGB_GAMMA));
 
+#ifdef GBUFFERS_DO_LIGHTING
   // Compute screen-space coordinates
   vec2 fragCoord = gl_FragCoord.xy / vec2(viewWidth, viewHeight);
   float depth    = gl_FragCoord.z;
 
-#ifdef GBUFFERS_DO_LIGHTING
   // SHADOW-SPACE CALCULATIONS
   // ===============================================
 
@@ -38,10 +38,13 @@ void main() {
     txLinear(gbufferModelViewInverse, normalize(shadowLightPosition));
 
   // shadow calculation
+  #ifdef GBUFFERS_NO_SHADOW
+  const float shadow = 1.0;
+  #else
   vec4 shadowClipPos = screenToShadowClip(vec3(fragCoord, depth));
   float shadow =
     tlComputeShadowSoft(shadowClipPos, 1.0, normal, ivec2(gl_FragCoord.xy));
-  // float shadow = 0.0;
+  #endif
 
   // LIGHTING CONSTANTS
   // ===============================================
@@ -52,8 +55,13 @@ void main() {
   // LIGHTING
   // ===============================================
 
-  vec3 lightMult = computeLightMult(
+  #if defined(GBUFFERS_APPROX_LIGHTING_MODEL)
+  vec3 lightMult = approxLightModel(
     light, normal, lightDir, shadow, skyAmbientColor, skyLightColor);
+  #else
+  vec3 lightMult = diffuseLightModel(
+    light, normal, lightDir, shadow, skyAmbientColor, skyLightColor);
+  #endif
   color.rgb *= lightMult;
 #endif
 
