@@ -5,32 +5,3 @@
 #define GBUFFERS_PASS_NORMAL
 #define GBUFFERS_LIGHT_FLAGS LTG_NO_SHADOW
 #include "/program/gbuffers_deferred.fsh"
-
-// uniform sampler2D lightmap;
-// uniform sampler2D gtexture;
-
-// uniform float alphaTestRef = 0.1;
-
-// in vec2 vtlight;
-// in vec2 texcoord;
-// in vec4 glcolor;
-// in vec3 normal;
-
-// /* RENDERTARGETS: 0,1,2 */
-// layout(location = 0) out vec4 color;
-// layout(location = 1) out vec4 lightInfo;
-// layout(location = 2) out vec4 normInfo;
-
-// #include "/lib/util.glsl"
-
-// void main() {
-//   color = texture(gtexture, texcoord) * glcolor;
-//   if (color.a < alphaTestRef) {
-//     discard;
-//   }
-
-//   uint lightFlags = LTG_NO_SHADOW;
-
-//   lightInfo = vec4(vtlight, flagsToColor(lightFlags), 1.0);
-//   normInfo  = normalToColor(normal);
-// }
