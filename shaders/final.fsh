@@ -19,7 +19,7 @@ void main() {
   if (depth < 1.0) {
     color.rgb = reinhardJodie(color.rgb);
   }
-  
+
   // inverse gamma correction
   color.rgb = pow(color.rgb, vec3(SRGB_GAMMA_INV));
 }

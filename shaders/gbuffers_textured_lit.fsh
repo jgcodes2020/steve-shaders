@@ -24,5 +24,5 @@ void main() {
   }
 
   lightInfo = vec4(vtlight, 0.0, 1.0);
-  normInfo = normalToColor(normal);
+  normInfo  = normalToColor(normal);
 }

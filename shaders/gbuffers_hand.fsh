@@ -26,5 +26,5 @@ void main() {
   uint lightFlags = LTG_NO_SHADOW;
 
   lightInfo = vec4(vtlight, flagsToColor(lightFlags), 1.0);
-  normInfo = normalToColor(normal);
+  normInfo  = normalToColor(normal);
 }

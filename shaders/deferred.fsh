@@ -26,11 +26,12 @@ void main() {
 
   // vector to sunlight
   vec3 lightDir =
-      txLinear(gbufferModelViewInverse, normalize(shadowLightPosition));
+    txLinear(gbufferModelViewInverse, normalize(shadowLightPosition));
 
   // shadow calculation
   vec4 shadowClipPos = screenToShadowClip(vec3(texcoord, info.depth));
-  float shadow = computeShadowSoft(shadowClipPos, info.normal, ivec2(gl_FragCoord.xy));
+  float shadow =
+    computeShadowSoft(shadowClipPos, info.normal, ivec2(gl_FragCoord.xy));
   if ((info.lightFlags & LTG_NO_SHADOW) != 0) {
     shadow = 1.0;
   }
@@ -38,26 +39,16 @@ void main() {
   // LIGHTING CONSTANTS
   // ===============================================
 
-  float cosSunToUp = dot(normalize(sunPosition), gbufferModelView[1].xyz);
-  float dayFactor = horizonStep(cosSunToUp, daySatAngle);
-  float nightFactor = horizonStep(cosSunToUp, nightSatAngle);
-  vec3 skyLightColor =
-      dayFactor * dayLightColor + nightFactor * nightLightColor;
-  vec3 skyAmbientColor =
-      dayFactor * dayAmbientColor + nightFactor * nightAmbientColor;
-
-  skyAmbientColor = mix(skyAmbientColor, nightVisionAmbientColor, nightVision);
+  vec3 skyAmbientColor, skyLightColor;
+  getSkyColors(skyAmbientColor, skyLightColor);
 
   // OPAQUE LIGHTING
   // ===============================================
 
+  vec3 lightMult = computeLightMult(
+    info.light, info.normal, lightDir, shadow, skyAmbientColor, skyLightColor);
   if (info.depth < 1.0) {
-    vec3 skyLight = skyLightColor * clamp(dot(lightDir, info.normal), 0.0, 1.0);
-    vec3 skyTotal = (skyAmbientColor + skyLight * shadow) *
-                    max(info.light.g, nightVision);
-    vec3 blockTotal = blockLightColor * info.light.r;
-
-    info.color.rgb *= (skyTotal + blockTotal);
+    info.color.rgb *= lightMult;
   }
 
   // composite translucent onto colour

@@ -9,7 +9,7 @@ out vec4 glcolor;
 
 void main() {
   texcoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
-  glcolor = gl_Color;
+  glcolor  = gl_Color;
 
   // if this is one of those debug lines you can
   // just yeet that out the window
@@ -19,6 +19,6 @@ void main() {
   }
 
   // Position
-  gl_Position = ftransform();
+  gl_Position     = ftransform();
   gl_Position.xyz = shadowDistort(gl_Position.xyz);
 }

@@ -1,15 +1,15 @@
 #ifndef UTIL_GLSL_INCLUDED
 #define UTIL_GLSL_INCLUDED
 
-#include "/lib/settings.glsl"
 #include "/lib/render_settings.glsl"
+#include "/lib/settings.glsl"
 #include "/lib/uniforms.glsl"
 
 // USEFUL CONSTANTS
 // ===============================================
 
 // The SRGB gamma and reciproclal gamma
-const float SRGB_GAMMA = 2.2;
+const float SRGB_GAMMA     = 2.2;
 const float SRGB_GAMMA_INV = 1.0 / 2.2;
 
 // Coefficients for measuring luma/luminance.
@@ -38,12 +38,18 @@ vec3 txAffine(mat4 matrix, vec3 position) {
 // Transforms a 3D vector by a linear (i.e. translation-free) transformation.
 // If used with a non-linear transformation, eliminates the non-linear
 // components.
-vec3 txLinear(mat4 matrix, vec3 position) { return mat3(matrix) * position; }
+vec3 txLinear(mat4 matrix, vec3 position) {
+  return mat3(matrix) * position;
+}
 
 mat2 rotationMatrix(float t) {
   float cosT = cos(t);
   float sinT = sin(t);
   return mat2(cosT, sinT, -sinT, cosT);
+}
+
+vec2 fragToNdc(vec2 fragCoord) {
+  return fma(fragCoord.xy, vec2(2.0) / vec2(viewWidth, viewHeight), vec2(-1.0));
 }
 
 // WEIRD MATH FUNCTIONS
@@ -72,17 +78,20 @@ vec3 reinhardJodie(vec3 v) {
 }
 
 vec4 sampleNoise(ivec2 fragCoord) {
-  return texelFetch(noisetex, fragCoord % noiseTextureResolution, 0);
+  return texelFetch(
+    noisetex, fragCoord % noiseTextureResolution, 0);
 }
 
 const float MF_TWO_PI = 6.2831853071;
-const float MF_PI = 3.1415926535;
+const float MF_PI     = 3.1415926535;
 
 // ENCODING
 // ===============================================
 
 // Convert a normal to a colour.
-vec4 normalToColor(vec3 normal) { return vec4(normal * 0.5 + 0.5, 1.0); }
+vec4 normalToColor(vec3 normal) {
+  return vec4(normal * 0.5 + 0.5, 1.0);
+}
 
 // Convert a colour back to a normal. Normals with very small
 // magnitudes will map to the zero vector.
@@ -90,14 +99,19 @@ vec3 colorToNormal(vec4 colour) {
   vec3 decoded = (colour.rgb - 0.5) * 2.0;
   if (dot(decoded, decoded) < 0.01) {
     return vec3(0.0);
-  } else {
+  }
+  else {
     return normalize(decoded);
   }
 }
 
 // Convert a set of 8 flags to a color component.
-float flagsToColor(uint flags) { return float(flags & 0xFFu) / 255.0; }
+float flagsToColor(uint flags) {
+  return float(flags & 0xFFu) / 255.0;
+}
 // Convert a color component to a set of 8 flags.
-uint colorToFlags(float color) { return uint(color * 255.0); }
+uint colorToFlags(float color) {
+  return uint(color * 255.0);
+}
 
 #endif
