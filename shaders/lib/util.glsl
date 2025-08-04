@@ -79,7 +79,7 @@ vec3 reinhardJodie(vec3 v) {
 
 vec4 sampleNoise(ivec2 fragCoord) {
   return texelFetch(
-    noisetex, fragCoord % noiseTextureResolution, 0);
+    noisetex, (fragCoord * frameCounter) % noiseTextureResolution, 0);
 }
 
 const float MF_TWO_PI = 6.2831853071;

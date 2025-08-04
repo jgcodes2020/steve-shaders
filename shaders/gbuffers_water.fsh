@@ -32,10 +32,6 @@ void main() {
   vec2 fragCoord = gl_FragCoord.xy / vec2(viewWidth, viewHeight);
   float depth    = gl_FragCoord.z;
 
-  // color = vec4(fragCoord, 0.0, 1.0);
-  // color.rgb = pow(color.rgb, vec3(SRGB_GAMMA));
-  // return;
-
   // SHADOW-SPACE CALCULATIONS
   // ===============================================
 

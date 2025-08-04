@@ -1,28 +1,32 @@
 #version 410 compatibility
 
-uniform sampler2D lightmap;
-uniform sampler2D gtexture;
+#define GBUFFERS_USE_TEXTURE
+#define GBUFFERS_PASS_LIGHT
+#include "/program/gbuffers_deferred.fsh"
 
-uniform float alphaTestRef = 0.1;
+// uniform sampler2D lightmap;
+// uniform sampler2D gtexture;
 
-in vec2 vtlight;
-in vec2 texcoord;
-in vec4 glcolor;
+// uniform float alphaTestRef = 0.1;
 
-/* RENDERTARGETS: 0,1,2 */
-layout(location = 0) out vec4 color;
-layout(location = 1) out vec4 lightInfo;
-layout(location = 2) out vec4 normInfo;
+// in vec2 vtlight;
+// in vec2 texcoord;
+// in vec4 glcolor;
 
-#include "/lib/util.glsl"
+// /* RENDERTARGETS: 0,1,2 */
+// layout(location = 0) out vec4 color;
+// layout(location = 1) out vec4 lightInfo;
+// layout(location = 2) out vec4 normInfo;
 
-void main() {
-  color = texture(gtexture, texcoord) * glcolor;
-  // color *= texture(lightmap, vtlight);
-  if (color.a < alphaTestRef) {
-    discard;
-  }
+// #include "/lib/util.glsl"
 
-  lightInfo = vec4(vtlight, 0.0, 1.0);
-  normInfo  = COL_NORMAL_NONE;
-}
+// void main() {
+//   color = texture(gtexture, texcoord) * glcolor;
+//   // color *= texture(lightmap, vtlight);
+//   if (color.a < alphaTestRef) {
+//     discard;
+//   }
+
+//   lightInfo = vec4(vtlight, 0.0, 1.0);
+//   normInfo  = COL_NORMAL_NONE;
+// }
