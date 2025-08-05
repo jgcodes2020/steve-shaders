@@ -4,9 +4,9 @@
 // TONEMAP AND COMBINE
 // ===============================================
 
-#include "/lib/lighting.glsl"
-#include "/lib/shadow.glsl"
-#include "/lib/util.glsl"
+#include "/lib/lighting/model.glsl"
+#include "/lib/lighting/shadow.glsl"
+#include "/lib/common.glsl"
 
 in vec2 texcoord;
 

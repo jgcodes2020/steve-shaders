@@ -1,5 +1,5 @@
-#ifndef UTIL_GLSL_INCLUDED
-#define UTIL_GLSL_INCLUDED
+#ifndef COMMON_GLSL_INCLUDED
+#define COMMON_GLSL_INCLUDED
 
 #include "/lib/render_settings.glsl"
 #include "/lib/settings.glsl"
@@ -22,13 +22,8 @@ const vec4 COL_NORMAL_NONE = vec4(0.5, 0.5, 0.5, 1.0);
 // FLAGS
 // ===============================================
 
-
 // Lighting: do not apply shadowing to this object.
 const uint LTG_NO_SHADOW = (1u << 0);
-
-// Block: tilt faces slightly in the shadow pass to
-// allow them to cast shadows at noon.
-const int BLOCK_SHADOW_TWEAK = (1 << 0);
 
 // TRANSFORMATION
 // ===============================================

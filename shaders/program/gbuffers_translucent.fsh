@@ -13,8 +13,8 @@ layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 lightInfo;
 layout(location = 2) out vec4 normInfo;
 
-#include "/lib/lighting.glsl"
-#include "/lib/util.glsl"
+#include "/lib/lighting/model.glsl"
+#include "/lib/common.glsl"
 
 void main() {
   color = texture(gtexture, texcoord) * glcolor;

@@ -11,7 +11,7 @@ layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 lightInfo;
 layout(location = 2) out vec4 normInfo;
 
-#include "/lib/util.glsl"
+#include "/lib/common.glsl"
 
 float fogCurve(float x) {
   const float w = 0.25;

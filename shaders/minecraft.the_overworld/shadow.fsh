@@ -9,7 +9,7 @@ in vec4 glcolor;
 
 layout(location = 0) out vec4 color;
 
-#include "/lib/shadow.glsl"
+#include "/lib/lighting/shadow.glsl"
 
 void main() {
   color = texture(gtexture, texcoord) * glcolor;

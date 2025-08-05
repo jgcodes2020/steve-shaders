@@ -19,7 +19,7 @@ layout(location = 0) out vec4 color;
 layout(location = 1) out vec4 lightInfo;
 layout(location = 2) out vec4 normInfo;
 
-#include "/lib/util.glsl"
+#include "/lib/common.glsl"
 
 void main() {
   #ifdef GBUFFERS_USE_TEXTURE

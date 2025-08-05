@@ -11,7 +11,7 @@ out vec2 vtlight;
 out vec3 normal;
 #endif
 
-#include "/lib/util.glsl"
+#include "/lib/common.glsl"
 
 void main() {
   gl_Position = ftransform();

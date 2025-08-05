@@ -1,8 +1,8 @@
-#ifndef LIGHTING_GLSL_INCLUDED
-#define LIGHTING_GLSL_INCLUDED
+#ifndef LIGHTING_MODEL_GLSL_INCLUDED
+#define LIGHTING_MODEL_GLSL_INCLUDED
 
-#include "/lib/shadow.glsl"
-#include "/lib/util.glsl"
+#include "/lib/common.glsl"
+#include "/lib/lighting/shadow.glsl"
 
 // sRGB: 252, 252, 222
 const vec3 blockLightColor = vec3(0.974, 0.974, 0.737);

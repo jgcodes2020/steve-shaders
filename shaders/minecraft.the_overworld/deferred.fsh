@@ -4,9 +4,9 @@
 // LIGHTING PASS
 // ===============================================
 
-#include "/lib/lighting.glsl"
-#include "/lib/shadow.glsl"
-#include "/lib/util.glsl"
+#include "/lib/lighting/model.glsl"
+#include "/lib/lighting/shadow.glsl"
+#include "/lib/common.glsl"
 
 in vec2 texcoord;
 layout(pixel_center_integer) in vec4 gl_FragCoord;

@@ -5,7 +5,7 @@ in vec2 mc_midTexCoord;
 out vec2 texcoord;
 out vec4 glcolor;
 
-#include "/lib/shadow.glsl"
+#include "/lib/lighting/shadow.glsl"
 
 void main() {
   texcoord = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;

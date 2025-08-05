@@ -1,7 +1,7 @@
-#ifndef SHADOW_GLSL_INCLUDED
-#define SHADOW_GLSL_INCLUDED
+#ifndef LIGHTING_SHADOW_GLSL_INCLUDED
+#define LIGHTING_SHADOW_GLSL_INCLUDED
 
-#include "/lib/util.glsl"
+#include "/lib/common.glsl"
 
 const float DISTORT_A      = 0.2;
 const float DISTORT_DU0_DX = DISTORT_A + (1 / DISTORT_A);
