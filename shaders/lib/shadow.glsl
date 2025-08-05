@@ -102,8 +102,8 @@ float computeShadowSoft(vec4 shadowClipPos, vec3 normal, ivec2 pixelCoord) {
 
 // The shadow test for translucent surfaces.
 float tlTestShadow(vec3 shadowScreenPos, float alpha) {
-  float tlTest = texture(shadowtex0, shadowScreenPos);
-  return tlTest;
+  float test = texture(shadowtex1, shadowScreenPos);
+  return max(test, 1.0 - alpha);
 }
 
 // Function to perform PCF over a translucent surface.
@@ -113,14 +113,14 @@ float tlComputeShadowSoft(
   const float offsetMul =
     ST_SHADOW_RADIUS / (float(ST_SHADOW_SAMPLES) * shadowMapResolution);
 
-  float theta = sampleNoise(pixelCoord).r * MF_TWO_PI;
-  mat2 rot    = rotationMatrix(theta) * offsetMul;
+  // float theta = sampleNoise(pixelCoord).r * MF_TWO_PI;
+  // mat2 rot    = rotationMatrix(theta) * offsetMul;
 
   float accum = 0.0;
   for (int x = -ST_SHADOW_SAMPLES; x < ST_SHADOW_SAMPLES; x++) {
     for (int y = -ST_SHADOW_SAMPLES; y < ST_SHADOW_SAMPLES; y++) {
       // compute offset, divide by shadow map resolution to put it in pixels
-      vec2 offset = rot * vec2(x, y);
+      vec2 offset = offsetMul * vec2(x, y);
       // bias and distort the clip space position
       vec4 offsetShadowClipPos = shadowClipPos + vec4(offset, 0.0, 0.0);
       offsetShadowClipPos.xyz += shadowBias(offsetShadowClipPos.xyz, normal);
