@@ -1,5 +1,3 @@
-#version 410 compatibility
-
 uniform sampler2D lightmap;
 uniform sampler2D gtexture;
 
