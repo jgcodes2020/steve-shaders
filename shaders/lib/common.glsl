@@ -69,6 +69,13 @@ float horizonStep(float cosSunToUp, float satPoint) {
   return 1.0 - xm1 * xm1;
 }
 
+// A inverse version of mix(). For a value, returns
+// the appropriate mixing factor if it's between start and end.
+// If past either end, it is clamped.
+float linearStep(float start, float end, float value) {
+  return clamp((value - start) / (end - start), 0.0, 1.0);
+}
+
 // 4-norm of a vector.
 float l4norm(vec2 pos) {
   pos *= pos;

@@ -10,27 +10,16 @@ const int FOG_LINEAR = 9729;
 const int FOG_SPHERE = 0;
 const int FOG_CYLINDER = 1;
 
+// Based on advice from Lura
+// https://github.com/Luracasmus/Base-460C/blob/fd6cfc2129fb5a3b1bb2c09383697be623cf2746/shaders/prog/generic.fsh#L80-L88
 float getFog(vec3 eyePos) {
-  float dist;
-  if (fogShape == FOG_CYLINDER) {
-    dist = length(eyePos.xz);
-  }
-  else {
-    dist = length(eyePos);
-  }
+  float sphereDist = length(eyePos);
+  float cylDist = max(length(eyePos.xy), abs(eyePos.y));
 
-  float fog;
-  if (fogMode == FOG_EXP) {
-    fog = exp(-dist * fogDensity);
-  }
-  else if (fogMode == FOG_EXP2) {
-    float temp = dist * fogDensity;
-    fog = exp(-(temp * temp));
-  }
-  else {
-    fog = (dist - fogStart) / (fogEnd - fogStart);
-  }
-  return clamp(fog, 0.0, 1.0);
+  float environmentFog = linearStep(fogStart, fogEnd, sphereDist);
+  float borderFog = linearStep(far * 0.9, far, cylDist);
+
+  return max(environmentFog, borderFog);
 }
 
 #endif

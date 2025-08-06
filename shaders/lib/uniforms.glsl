@@ -33,12 +33,10 @@ uniform int renderStage;   // render stage
 uniform int frameCounter;  // frame counter
 uniform vec3 skyColor;     // sky color
 
-uniform vec3 fogColor;     // horizon fog color
+uniform vec3 fogColor;     // fog color
 uniform float fogStart; // linear fog: starting dist
 uniform float fogEnd; // linear fog: ending dist
-uniform float fogDensity; // exp/exp^2 fog: density
-uniform int fogMode; // fog mode
-uniform int fogShape; // fog shape
+uniform float far; // a distance that's kinda far. yeah.
 
 uniform float viewWidth;   // viewport width
 uniform float viewHeight;  // viewport height
