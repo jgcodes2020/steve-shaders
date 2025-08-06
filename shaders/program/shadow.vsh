@@ -3,6 +3,7 @@ in vec2 mc_Entity;
 
 out vec2 texcoord;
 out vec4 glcolor;
+flat out int entityId;
 
 #include "/lib/common.glsl"
 #include "/lib/lighting/shadow.glsl"
@@ -20,13 +21,13 @@ void main() {
   }
 
   vec3 vertex = gl_Vertex.xyz;
-  vec3 normal = txLinear(gbufferModelViewInverse, gl_NormalMatrix * gl_Normal);
+  vec3 normal = gl_Normal;
 
   // vertex shifting so that shadows appears at noon
-  if (IsPlant(int(mc_Entity.x))) {
-      const float PUSH_FACTOR = 0.3;
-      vec2 midCoord = (gl_TextureMatrix[0] * vec4(mc_midTexCoord, 0.0, 1.0)).st;
-      vertex += normal * PUSH_FACTOR * sign(texcoord.y - midCoord.y);
+  if (isPlant(int(mc_Entity.x))) {
+    const float PUSH_FACTOR = 0.2;
+    vec2 midCoord = (gl_TextureMatrix[0] * vec4(mc_midTexCoord, 0.0, 1.0)).st;
+    vertex += normal * PUSH_FACTOR * sign(texcoord.y - midCoord.y);
   }
 
   // Position

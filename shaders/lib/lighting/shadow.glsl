@@ -6,10 +6,6 @@
 const float DISTORT_A      = 0.2;
 const float DISTORT_DU0_DX = DISTORT_A + (1 / DISTORT_A);
 
-const float SHADOW_MIN_RADIUS   = 0.5;
-const float SHADOW_MAX_RADIUS   = 1.5;
-const float SHADOW_RADIUS_SCALE = 7.0;
-
 // Distorts a position in clip space to capture more detail near the center
 vec3 shadowDistort(vec3 clipPos) {
   // XY distortion function:
@@ -77,14 +73,14 @@ float computeShadowSoft(vec4 shadowClipPos, vec3 normal, ivec2 pixelCoord) {
   const float offsetMul =
     ST_SHADOW_RADIUS / (float(ST_SHADOW_SAMPLES) * shadowMapResolution);
 
-  float theta = sampleNoise(pixelCoord).r * MF_TWO_PI;
-  mat2 rot    = rotationMatrix(theta) * offsetMul;
+  // float theta = sampleNoise(pixelCoord).r * MF_TWO_PI;
+  // mat2 rot    = rotationMatrix(theta) * offsetMul;
 
   float accum = 0.0;
   for (int x = -ST_SHADOW_SAMPLES; x < ST_SHADOW_SAMPLES; x++) {
     for (int y = -ST_SHADOW_SAMPLES; y < ST_SHADOW_SAMPLES; y++) {
       // compute offset, divide by shadow map resolution to put it in pixels
-      vec2 offset = rot * vec2(x, y);
+      vec2 offset = offsetMul * vec2(x, y);
       // bias and distort the clip space position
       vec4 offsetShadowClipPos = shadowClipPos + vec4(offset, 0.0, 0.0);
       offsetShadowClipPos.xyz += shadowBias(offsetShadowClipPos.xyz, normal);
