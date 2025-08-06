@@ -14,6 +14,6 @@ layout(location = 0) out vec4 color;
 void main() {
   color = texture(gtexture, texcoord) * glcolor;
   if (color.a < alphaTestRef && !isPlant(entityId)) {
-      discard;
-    }
+    discard;
+  }
 }

@@ -20,5 +20,5 @@ void main() {
   normal = gl_NormalMatrix * gl_Normal;
   normal = txLinear(gbufferModelViewInverse, normal);
 
-  blockId = mc_Entity;
+  blockId = int(mc_Entity.x);
 }
