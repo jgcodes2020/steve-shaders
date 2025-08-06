@@ -19,6 +19,9 @@ const vec3 LUMA_COEFFS = vec3(0.2126, 0.7152, 0.0722);
 // from being processed for that pixel.
 const vec4 COL_NORMAL_NONE = vec4(0.5, 0.5, 0.5, 1.0);
 
+// A pretty small number. Used for computing approximate equality.
+const float EPSILON = 1.0e-4;
+
 // FLAGS
 // ===============================================
 
