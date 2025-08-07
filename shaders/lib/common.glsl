@@ -25,8 +25,10 @@ const float EPSILON = 1.0e-4;
 // FLAGS
 // ===============================================
 
-// Lighting: do not apply shadowing to this object.
+// Lighting: do not apply shadowing to this pixel.
 const uint LTG_NO_SHADOW = (1u << 0);
+// Lighting: this is a sky pixel.
+const uint LTG_SKY = (1u << 7);
 
 // TRANSFORMATION
 // ===============================================

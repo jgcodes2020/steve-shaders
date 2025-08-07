@@ -35,7 +35,7 @@ void main() {
 
   // vector to sunlight
   vec3 lightDir =
-    txLinear(gbufferModelViewInverse, normalize(shadowLightPosition));
+    txLinear(gbufferModelViewInverse, shadowLightPosition * 0.01);
 
   // shadow calculation
   #ifdef GBUFFERS_NO_SHADOW

@@ -12,30 +12,31 @@ layout(location = 1) out vec4 lightInfo;
 layout(location = 2) out vec4 normInfo;
 
 #include "/lib/common.glsl"
+#include "/lib/sky/model.glsl"
 
 float fogCurve(float x) {
   const float w = 0.25;
   return w / (x * x + w);
 }
 
-vec3 vanillaSky(vec3 viewDir) {
-  float cosViewToUp = dot(viewDir, gbufferModelView[1].xyz);
+vec3 vanillaSky(vec3 eyePos) {
+  float cosViewToUp = normalize(eyePos).y;
   return mix(skyColor, fogColor, fogCurve(max(cosViewToUp, 0.0)));
 }
 
 void main() {
-  if (renderStage == MC_RENDER_STAGE_STARS) {
-    color = glcolor;
+  color = glcolor;
+  if (renderStage == MC_RENDER_STAGE_STARS || color.a < 1.0) {
     return;
   }
+  vec3 screenPos = vec3(gl_FragCoord.xy / vec2(viewWidth, viewHeight), 1.0);
+  vec3 ndcPos = screenPos * 2.0 - 1.0;
+  vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);
+  vec3 eyePos = txLinear(gbufferModelViewInverse, viewPos);
+  color = vec4(vanillaSky(eyePos), 1.0);
 
-  vec2 ndcXY =
-    fma(gl_FragCoord.xy, vec2(2.0) / vec2(viewWidth, viewHeight), vec2(-1.0));
-  vec3 viewDir = txProjective(gbufferProjectionInverse, vec3(ndcXY, 1.0));
-  viewDir      = normalize(viewDir);
+  const uint lightFlags = LTG_SKY;
 
-  color = vec4(vanillaSky(viewDir), 1.0);
-
-  lightInfo = vec4(0.0, 0.0, 0.0, 1.0);
-  normInfo  = COL_NORMAL_NONE;
+  lightInfo = vec4(0.0, 0.0, flagsToColor(lightFlags), 1.0);
+  normInfo = COL_NORMAL_NONE;
 }

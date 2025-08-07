@@ -26,7 +26,7 @@ void main() {
 
   // vector to sunlight
   vec3 lightDir =
-    txLinear(gbufferModelViewInverse, normalize(shadowLightPosition));
+    txLinear(gbufferModelViewInverse, shadowLightPosition * 0.01);
 
   // shadow calculation
   vec4 shadowClipPos = screenToShadowClip(vec3(texcoord, info.depth));
