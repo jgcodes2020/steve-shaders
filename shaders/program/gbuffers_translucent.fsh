@@ -41,7 +41,7 @@ void main() {
   #ifdef GBUFFERS_NO_SHADOW
   const float shadow = 1.0;
   #else
-  vec4 shadowClipPos = screenToShadowClip(vec3(fragCoord, depth));
+  vec4 shadowClipPos = screenToShadowClip(vec3(fragCoord, depth), false);
   float shadow =
     tlComputeShadowSoft(shadowClipPos, 1.0, normal, ivec2(gl_FragCoord.xy));
   #endif

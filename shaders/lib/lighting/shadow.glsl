@@ -3,7 +3,7 @@
 
 #include "/lib/common.glsl"
 
-const float DISTORT_A      = 0.2;
+const float DISTORT_A      = 0.1;
 const float DISTORT_DU0_DX = DISTORT_A + (1 / DISTORT_A);
 
 // Distorts a position in clip space to capture more detail near the center
@@ -40,14 +40,17 @@ vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
 }
 
 // Converts screen-space coordinates to clip space.
-vec4 screenToShadowClip(vec3 screenPos) {
-  // Convert screen space to shadow view space
+vec4 screenToShadowClip(vec3 screenPos, bool isHand) {
+  // Convert screen space to world space
   vec3 ndcPos        = screenPos * 2.0 - 1.0;
   vec3 viewPos       = txProjective(gbufferProjectionInverse, ndcPos);
-  vec3 feetPlayerPos = txAffine(gbufferModelViewInverse, viewPos);
-  vec3 shadowViewPos = txAffine(shadowModelView, feetPlayerPos);
+  if (isHand) {
+    viewPos.x += 0.4;
+  }
 
+  vec3 feetPlayerPos = txAffine(gbufferModelViewInverse, viewPos);
   // Convert to shadow clip space
+  vec3 shadowViewPos = txAffine(shadowModelView, feetPlayerPos);
   return shadowProjection * vec4(shadowViewPos, 1.0);
 }
 

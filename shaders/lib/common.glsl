@@ -28,7 +28,9 @@ const float EPSILON = 1.0e-4;
 // Lighting: do not apply shadowing to this pixel.
 const uint LTG_NO_SHADOW = (1u << 0);
 // Lighting: this is a sky pixel.
-const uint LTG_SKY = (1u << 7);
+const uint LTG_SKY = (1u << 1);
+// Lighting: this is a hand pixel, push its position upwards before sampling.
+const uint LTG_HAND = (1u << 2);
 
 // TRANSFORMATION
 // ===============================================

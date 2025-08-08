@@ -15,7 +15,7 @@ layout(location = 2) out vec4 normInfo;
 #include "/lib/sky/model.glsl"
 
 float fogCurve(float x) {
-  const float w = 0.25;
+  const float w = 0.05;
   return w / (x * x + w);
 }
 

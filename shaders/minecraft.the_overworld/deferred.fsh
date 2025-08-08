@@ -29,7 +29,8 @@ void main() {
     txLinear(gbufferModelViewInverse, shadowLightPosition * 0.01);
 
   // shadow calculation
-  vec4 shadowClipPos = screenToShadowClip(vec3(texcoord, info.depth));
+  bool isHand = (info.lightFlags & LTG_HAND) != 0;
+  vec4 shadowClipPos = screenToShadowClip(vec3(texcoord, info.depth), isHand && firstPersonCamera);
   float shadow =
     computeShadowSoft(shadowClipPos, info.normal, ivec2(gl_FragCoord.xy));
   if ((info.lightFlags & LTG_NO_SHADOW) != 0) {

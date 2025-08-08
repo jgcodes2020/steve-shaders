@@ -30,6 +30,8 @@ uniform vec3 sunPosition;          // sun angle
 uniform float nightVision;  // multiplier for night vision effect
 uniform float blindness; // multiplier for blindness effect
 
+uniform bool firstPersonCamera; // whether the player is in first-person
+
 uniform int renderStage;   // render stage
 uniform int frameCounter;  // frame counter
 uniform vec3 skyColor;     // sky color
