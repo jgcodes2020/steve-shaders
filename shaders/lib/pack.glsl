@@ -34,13 +34,13 @@ const uint GEO_TYPE_HAND = 2u;
 
 uvec2 packLightInfo(LightInfo info) {
   uint rComp = packUnorm4x8(vec4(info.vanilla, 0.0, 0.0)) & 0xFFFFu;
-  rComp |= (info.geoType & 0xFFu) << 16;
+  rComp = bitfieldInsert(rComp, info.geoType, 16, 8);
   return uvec2(rComp, 0u);
 }
 
 LightInfo unpackLightInfo(uvec2 data) {
   uint vanillaPacked = data.r & 0xFFFFu;
-  uint geoType = (data.r >> 16) & 0xFFu;
+  uint geoType = bitfieldExtract(data.r, 16, 8);
 
   vec2 vanilla = unpackUnorm4x8(vanillaPacked).rg;
   

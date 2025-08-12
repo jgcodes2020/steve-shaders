@@ -5,5 +5,6 @@
 #include "/lib/pipeline_config.glsl"
 
 #include "/lib/math/transform.glsl"
+#include "/lib/math/misc.glsl"
 
 #endif

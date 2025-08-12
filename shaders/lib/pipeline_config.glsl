@@ -12,18 +12,18 @@
 /*
 const int colortex0Format = RGBA16F;
 */
-DECL_COLORTEX(rgba16f, 0);
+DECL_COLORTEX(rgba16f, 0)
 
 /*
 const int colortex1Format = RG8_SNORM;
 const vec4 colortex1ClearColor = vec4(0.0, 0.0, 0.0, 1.0);
 */
-DECL_COLORTEX(rg8_snorm, 1);
+DECL_COLORTEX(rg8_snorm, 1)
 
 /*
 const int colortex2Format = RG32UI;
 const vec4 colortex2ClearColor = vec4(0.0, 0.0, 0.0, 1.0);
 */
-DECL_COLORTEX_U(rg32ui, 2);
+DECL_COLORTEX_U(rg32ui, 2)
 
 #undef DECL_COLORTEX

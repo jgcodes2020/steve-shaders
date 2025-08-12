@@ -10,22 +10,32 @@ in VertexData {
   vec2 uvTex;
   vec2 light;
   vec3 normal;
-} v;
+}
+v;
 
+// naming scheme: bThing = buffer for thing
 /* RENDERTARGETS: 0,1,2 */
-layout(location = 0) out vec4 color;
-layout(location = 1) out vec2 normal;
-layout(location = 2) out uvec2 lightInfo;
+layout(location = 0) out vec4 bColor;
+layout(location = 1) out vec2 bNormal;
+layout(location = 2) out uvec2 bLight;
 
 void main() {
-  color = texture(gtexture, v.uvTex) * v.color;
-  if (color.a < alphaTestRef)
+  bColor = texture(gtexture, v.uvTex) * v.color;
+  #ifdef ALPHA_TEST
+  if (bColor.a < alphaTestRef)
     discard;
-  
-  normal = packNormal(v.normal);
-  
-  lightInfo = packLightInfo(LightInfo(
-    v.light,
-    GEO_TYPE_WORLD
-  ));
+  #endif
+
+  #ifdef NO_NORMAL
+  // z-direction in view space
+  bNormal = packNormal(gbufferModelViewInverse[2].xyz);
+  #else
+  bNormal = packNormal(v.normal);
+  #endif
+
+  #ifdef HAND
+  bLight = packLightInfo(LightInfo(v.light, GEO_TYPE_HAND));
+  #else
+  bLight = packLightInfo(LightInfo(v.light, GEO_TYPE_WORLD));
+  #endif
 }

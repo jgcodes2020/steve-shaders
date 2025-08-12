@@ -3,5 +3,10 @@
         "*.vsh": "glsl",
         "*.fsh": "glsl",
         "*.csh": "glsl",
+    },
+    "material-icon-theme.files.associations": {
+        "*.vsh": "shader",
+        "*.fsh": "shader",
+        "*.csh": "shader",
     }
 }
