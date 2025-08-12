@@ -1,0 +1,6 @@
+block_wrangler @ git+https://github.com/camplowell/block_wrangler.git@18fceda4fa1bcbc81b9a31afe2a6f9884ff5fe9e
+case-converter==1.2.0
+markdown-it-py==3.0.0
+mdurl==0.1.2
+Pygments==2.19.2
+rich==13.7.1
