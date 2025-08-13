@@ -21,30 +21,33 @@ vec3 unpackNormal(vec2 f) {
 // COLORTEX2 (LIGHTING INFO)
 // ==================================
 
-struct LightInfo {
+struct FragInfo {
   // vanilla light values (r: block, g: sky)
-  vec2 vanilla;
+  vec2 vtLight;
   // Classifies geometry that may need special constraints.
   uint geoType;
+  // vanilla ambient occlusion on blocks.
+  float ao;
 };
 
 const uint GEO_TYPE_SKY = 0u;
 const uint GEO_TYPE_WORLD = 1u;
 const uint GEO_TYPE_HAND = 2u;
 
-uvec2 packLightInfo(LightInfo info) {
-  uint rComp = packUnorm4x8(vec4(info.vanilla, 0.0, 0.0)) & 0xFFFFu;
-  rComp = bitfieldInsert(rComp, info.geoType, 16, 8);
-  return uvec2(rComp, 0u);
+uvec2 packFragInfo(FragInfo info) {
+  uint rComp = packUnorm4x8(vec4(info.vtLight, info.ao, 0.0));
+  uint gComp = info.geoType;
+  return uvec2(rComp, gComp);
 }
 
-LightInfo unpackLightInfo(uvec2 data) {
-  uint vanillaPacked = data.r & 0xFFFFu;
-  uint geoType = bitfieldExtract(data.r, 16, 8);
+FragInfo unpackFragInfo(uvec2 data) {
+  vec4 rCompU = unpackUnorm4x8(data.r);
 
-  vec2 vanilla = unpackUnorm4x8(vanillaPacked).rg;
+  vec2 vtLight = rCompU.rg;
+  uint geoType = data.g;
+  float ao = rCompU.b;
   
-  return LightInfo(vanilla, geoType);
+  return FragInfo(vtLight, geoType, ao);
 }
 
 #endif

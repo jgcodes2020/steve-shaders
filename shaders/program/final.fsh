@@ -7,6 +7,6 @@ in vec2 texcoord;
 layout(location = 0) out vec4 color;
 
 void main() {
-	color = texture(colortex0, texcoord);
-  color = pow(color, vec3(SRGB_GAMMA_RCP));
+	color = vec4(texture(colortex0, texcoord).rgb, 1.0);
+  color.rgb = pow(color.rgb, vec3(SRGB_GAMMA_RCP));
 }

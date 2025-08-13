@@ -10,12 +10,22 @@ out VertexData {
   #ifndef NO_NORMAL
   vec3 normal;
   #endif
+
+  #ifdef TERRAIN_OPAQUE
+  float ao;
+  #endif
 } v;
 
 void main() {
   gl_Position = ftransform();
 
+  #ifdef TERRAIN_OPAQUE
+  v.ao = gl_Color.a;
+  v.color = vec4(gl_Color.rgb, 1.0);
+  #else
   v.color = gl_Color;
+  #endif
+  
   #ifdef ENTITY_COLOR
   v.color.rgb = mix(v.color.rgb, entityColor.rgb, entityColor.a);
   #endif

@@ -9,14 +9,21 @@ in VertexData {
   vec4 color;
   vec2 uvTex;
   vec2 light;
+
+  #ifndef NO_NORMAL
   vec3 normal;
+  #endif
+
+  #ifdef TERRAIN_OPAQUE
+  float ao;
+  #endif
 }
 v;
 
 // naming scheme: bThing = buffer for thing
 /* RENDERTARGETS: 0,1,2 */
 layout(location = 0) out vec4 bColor;
-layout(location = 1) out vec2 bNormal;
+layout(location = 1) out vec3 bNormal;
 layout(location = 2) out uvec2 bLight;
 
 void main() {
@@ -27,15 +34,23 @@ void main() {
   #endif
 
   #ifdef NO_NORMAL
-  // z-direction in view space
-  bNormal = packNormal(gbufferModelViewInverse[2].xyz);
+  // view-space z-direction in model space
+  bNormal = gbufferModelViewInverse[2].xyz;
   #else
-  bNormal = packNormal(v.normal);
+  bNormal = v.normal;
   #endif
 
   #ifdef HAND
-  bLight = packLightInfo(LightInfo(v.light, GEO_TYPE_HAND));
+  const uint geoType = GEO_TYPE_HAND;
   #else
-  bLight = packLightInfo(LightInfo(v.light, GEO_TYPE_WORLD));
+  const uint geoType = GEO_TYPE_WORLD;
   #endif
+
+  #ifdef TERRAIN_OPAQUE
+  float ao = v.ao;
+  #else
+  const float ao = 1.0;
+  #endif
+
+  bLight = packFragInfo(FragInfo(v.light, geoType, ao));
 }

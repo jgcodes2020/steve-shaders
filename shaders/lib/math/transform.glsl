@@ -3,7 +3,7 @@
 
 // Performs an affine transformation on a point.
 vec3 txAffine(mat4 matrix, vec3 point) {
-  return mat3(matrix) * vec + matrix[3].xyz;
+  return mat3(matrix) * point + matrix[3].xyz;
 }
 
 // Performs a projective transformation on a point.

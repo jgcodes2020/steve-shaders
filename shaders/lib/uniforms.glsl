@@ -1,9 +1,40 @@
 #ifndef UNIFORMS_GLSL_INCLUDED
 #define UNIFORMS_GLSL_INCLUDED
 
-uniform mat4 gbufferModelViewInverse; // view -> player space
+uniform sampler2D depthtex0;  // depth
+uniform sampler2D depthtex1;  // depth (opaque)
 
-uniform vec4 entityColor; // overlay color for entities
-uniform float alphaTestRef; // alpha testing threshold
+uniform sampler2DShadow shadowtex0;  // shadow distance
+uniform sampler2DShadow shadowtex1;  // shadow distance (opaque)
+
+uniform sampler2D noisetex;  // noise
+
+uniform mat4 gbufferModelView;          // world -> view
+uniform mat4 gbufferProjectionInverse;  // NDC -> view
+uniform mat4 gbufferModelViewInverse;   // view -> world
+uniform mat4 shadowModelView;           // player -> shadow
+uniform mat4 shadowProjection;          // shadow -> shadow NDC
+
+uniform vec3 shadowLightPosition;  // sun/moon angle
+uniform vec3 sunPosition;          // sun angle
+
+uniform float nightVision;  // multiplier for night vision effect
+uniform float blindness;    // multiplier for blindness effect
+
+uniform bool firstPersonCamera;  // whether the player is in first-person
+
+uniform int renderStage;     // render stage
+uniform int frameCounter;    // frame counter
+uniform float alphaTestRef;  // maximum opacity that we can ignore
+uniform vec4 entityColor;    // overlay color for entities
+uniform vec3 skyColor;       // sky color
+
+uniform vec3 fogColor;   // fog color
+uniform float fogStart;  // linear fog: starting dist
+uniform float fogEnd;    // linear fog: ending dist
+uniform float far;       // a distance that's kinda far. yeah.
+
+uniform float viewWidth;   // viewport width
+uniform float viewHeight;  // viewport height
 
 #endif
