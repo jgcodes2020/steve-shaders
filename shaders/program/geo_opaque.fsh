@@ -32,7 +32,8 @@ void main() {
   vec4 texSpecular = texture(specular, v.uvTex);
   vec4 texNormal = texture(normals, v.uvTex);
 
-  vec3 tbnNormal = vec3(texNormal.xy, sqrt(1.0 - dot(texNormal.xy, texNormal.xy)));
+  vec2 tbnNormalXY = fma(texNormal.xy, vec2(2.0), vec2(-1.0));
+  vec3 tbnNormal = vec3(tbnNormalXY, sqrt(1.0 - dot(tbnNormalXY, tbnNormalXY)));
   vec3 normal = v.gbufferTangentInverse * tbnNormal;
 
   vec2 vnLight = v.light;

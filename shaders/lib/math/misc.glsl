@@ -12,6 +12,11 @@ const float M_PI = 3.1415926;
 // Coefficients for measuring luma/luminance.
 const vec3 LUMA_COEFFS = vec3(0.2126, 0.7152, 0.0722);
 
+// positive-clamped dot product.
+float clampDot(vec3 x, vec3 y) {
+  return max(dot(x, y), 0.0);
+}
+
 // Squares a number.
 float pow2(float x) {
   return x * x;

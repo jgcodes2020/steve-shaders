@@ -18,14 +18,13 @@ vec3 lt_pbrLighting(vec3 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec
   // Since incoming distribution of sunlight can be modelled as a Dirac delta 
   // function, we simply evaluate the term at the desired reflectance.
   {
-    float nDotL = dot(sunDir, i.normal);
     vec3 radiance = skyLight;
     vec3 reflectance = brdf(i.normal, sunDir, viewDir, color, spAlpha, spF0);
-    result += reflectance * radiance * nDotL;
+    result += reflectance * radiance;
   }
 
   // ambient light. 
-  result += color * (ambientLight * i.ao);
+  result += color * (ambientLight * i.ao * i.vnLight.g);
 
   return result;
 }

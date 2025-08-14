@@ -19,12 +19,15 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
 
   vec3 ndcPos = fma(vec3(screenCoords, depth), vec3(2.0), vec3(-1.0));
   vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);
-  vec3 viewDir = mat3(gbufferModelViewInverse) * -viewPos;
+  vec3 viewDir = normalize(mat3(gbufferModelViewInverse) * -viewPos);
 
   vec3 ambientLight, skyLight;
   ltOverworld_skyColors(ambientLight, skyLight);
 
-  color = lt_pbrLighting(color, i, viewDir, ambientLight, skyLight);
+  if (depth < 1.0) {
+    color = lt_pbrLighting(color, i, viewDir, ambientLight, skyLight);
+  }
+
 }
 
 void main() {

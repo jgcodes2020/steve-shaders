@@ -35,7 +35,7 @@ struct FragInfo {
 };
 
 uvec4 packFragInfo(FragInfo i) {
-  uint r = packUnorm4x8(vec4(i.normal, 0.0));
+  uint r = packSnorm4x8(vec4(i.normal, 0.0));
   
   uint g = packUnorm4x8(vec4(i.vnLight, i.ao, 0.0));
   g |= (i.hand)? 0x80000000u : 0;
@@ -46,7 +46,7 @@ uvec4 packFragInfo(FragInfo i) {
 }
 
 FragInfo unpackFragInfo(uvec4 v) {
-  vec3 normal = unpackUnorm4x8(v.r).xyz;
+  vec3 normal = unpackSnorm4x8(v.r).xyz;
 
   vec4 unpackG = unpackUnorm4x8(v.g & 0x00FFFFFFu);
   vec2 vnLight = unpackG.rg;

@@ -32,8 +32,8 @@ void main() {
   v.uvTex = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
   v.light = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
 
-  vec3 normal = mat3(gbufferModelViewInverse) * gl_NormalMatrix * normalize(gl_Normal);
-  vec3 tangent = mat3(gbufferModelViewInverse) * gl_NormalMatrix * normalize(at_tangent.xyz);
+  vec3 normal = normalize(mat3(gbufferModelViewInverse) * gl_NormalMatrix * gl_Normal);
+  vec3 tangent = normalize(mat3(gbufferModelViewInverse) * gl_NormalMatrix * at_tangent.xyz);
   vec3 bitangent = cross(tangent, normal) * sign(at_tangent.w);
 
   v.gbufferTangentInverse = mat3(tangent, bitangent, normal);
