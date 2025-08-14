@@ -21,10 +21,9 @@ in VertexData {
 v;
 
 // naming scheme: bThing = buffer for thing
-/* RENDERTARGETS: 0,1,2 */
+/* RENDERTARGETS: 0,1 */
 layout(location = 0) out vec4 bColor;
-layout(location = 1) out vec3 bNormal;
-layout(location = 2) out uvec2 bLight;
+layout(location = 1) out uvec4 bFragInfo;
 
 void main() {
   bColor = texture(gtexture, v.uvTex) * v.color;
@@ -32,25 +31,4 @@ void main() {
   if (bColor.a < alphaTestRef)
     discard;
   #endif
-
-  #ifdef NO_NORMAL
-  // view-space z-direction in model space
-  bNormal = gbufferModelViewInverse[2].xyz;
-  #else
-  bNormal = v.normal;
-  #endif
-
-  #ifdef HAND
-  const uint geoType = GEO_TYPE_HAND;
-  #else
-  const uint geoType = GEO_TYPE_WORLD;
-  #endif
-
-  #ifdef TERRAIN_OPAQUE
-  float ao = v.ao;
-  #else
-  const float ao = 1.0;
-  #endif
-
-  bLight = packFragInfo(FragInfo(v.light, geoType, ao));
 }
