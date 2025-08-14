@@ -1,26 +1,33 @@
 #ifndef LIGHTING_MODEL_GLSL_INCLUDED
 #define LIGHTING_MODEL_GLSL_INCLUDED
 
-struct LightPixelInfo {
-  vec3 color;
-  vec3 normal;
-  vec2 vtLight;
-  float ao;
-};
+#include "/lib/lighting/brdf.glsl"
+#include "/lib/math/misc.glsl"
+#include "/lib/uniforms.glsl"
+#include "/lib/pack.glsl"
 
-// basic diffuse lighting model.
-vec3 lt_diffuseLighting(LightPixelInfo p, vec3 ambientLight, vec3 skyLight, vec3 blockLight) {
-  vec3 sunL = mat3(gbufferModelViewInverse) * 0.01 * sunPosition;
+vec3 lt_pbrLighting(vec3 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec3 skyLight) {
+  float spAlpha = pow2(1.0 - i.spSmoothness);
+  float spF0 = i.spF0;
 
-  float sunNDotL = max(dot(p.normal, sunL), 0.0);
+  vec3 result = vec3(0.0);
 
-  vec3 skyAmbient = ambientLight * p.vtLight.g;
-  vec3 skyDiffuse = skyLight * sunNDotL;
+  vec3 sunDir = mat3(gbufferModelViewInverse) * (shadowLightPosition * 0.01);
 
-  vec3 skyTotal = skyAmbient + skyDiffuse;
-  vec3 blockTotal = blockLight * p.vtLight.r;
+  // Reflectance due to sunlight. 
+  // Since incoming distribution of sunlight can be modelled as a Dirac delta 
+  // function, we simply evaluate the term at the desired reflectance.
+  {
+    float nDotL = dot(sunDir, i.normal);
+    vec3 radiance = skyLight;
+    vec3 reflectance = brdf(i.normal, sunDir, viewDir, color, spAlpha, spF0);
+    result += reflectance * radiance * nDotL;
+  }
 
-  return p.color * (skyTotal + blockTotal);
+  // ambient light. 
+  result += color * (ambientLight * i.ao);
+
+  return result;
 }
 
 #endif

@@ -8,5 +8,6 @@
         "*.vsh": "shader",
         "*.fsh": "shader",
         "*.csh": "shader",
-    }
+    },
+    "shader-validator.glsl.targetClient": "OpenGL450",
 }

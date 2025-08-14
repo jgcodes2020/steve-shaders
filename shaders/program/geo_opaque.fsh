@@ -4,19 +4,16 @@
 #include "/lib/pack.glsl"
 
 uniform sampler2D gtexture;
+uniform sampler2D normals;
+uniform sampler2D specular;
 
 in VertexData {
   vec4 color;
   vec2 uvTex;
   vec2 light;
-
-  #ifndef NO_NORMAL
-  vec3 normal;
-  #endif
-
-  #ifdef TERRAIN_OPAQUE
   float ao;
-  #endif
+
+  flat mat3 gbufferTangentInverse;
 }
 v;
 
@@ -27,8 +24,25 @@ layout(location = 1) out uvec4 bFragInfo;
 
 void main() {
   bColor = texture(gtexture, v.uvTex) * v.color;
-  #ifdef ALPHA_TEST
+#ifdef ALPHA_TEST
   if (bColor.a < alphaTestRef)
     discard;
-  #endif
+#endif
+
+  vec4 texSpecular = texture(specular, v.uvTex);
+  vec4 texNormal = texture(normals, v.uvTex);
+
+  vec3 tbnNormal = vec3(texNormal.xy, sqrt(1.0 - dot(texNormal.xy, texNormal.xy)));
+  vec3 normal = v.gbufferTangentInverse * tbnNormal;
+
+  vec2 vnLight = v.light;
+  float ao = v.ao * texNormal.b;
+  const bool hand = false;
+
+  float spSmoothness = texSpecular.r;
+  float spF0 = clamp(texSpecular.g, 0.0, 229.0 / 255.0);
+  float emission = clamp(texSpecular.b * (255.0 / 254.0), 0.0, 1.0);
+
+  FragInfo i = FragInfo(normal, vnLight, ao, hand, spSmoothness, spF0, emission);
+  bFragInfo = packFragInfo(i);
 }

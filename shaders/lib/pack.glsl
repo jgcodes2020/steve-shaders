@@ -8,11 +8,11 @@
 vec2 octaPackNormal(vec3 n) {
   n /= dot(abs(n), vec3(1.0));
   n.xy = (n.z >= 0.0)? n.xy : (1.0 - abs(n.yx)) * sign(n.xy);
-  return fma(n.xy, 0.5, 0.5);
+  return fma(n.xy, vec2(0.5), vec2(0.5));
 }
 
 vec3 octaUnpackNormal(vec2 f) {
-  f = fma(f, 2.0, -1.0);
+  f = fma(f, vec2(2.0), vec2(-1.0));
   vec3 n = vec3(f.xy, 1.0 - dot(abs(f), vec2(1.0)));
   float t = clamp(-n.z, 0.0, 1.0);
   n.xy += mix(vec2(t), vec2(-t), greaterThan(n.xy, vec2(0.0)));
@@ -29,26 +29,24 @@ struct FragInfo {
   float ao;
   bool hand;
 
-  float spAlpha;
+  float spSmoothness;
   float spF0;
   float emission;
 };
 
 uvec4 packFragInfo(FragInfo i) {
-  vec2 packedNormal = octaPackNormal(i.normal);
-  uint r = packHalf2x16(packedNormal);
+  uint r = packUnorm4x8(vec4(i.normal, 0.0));
   
-  uint g = packUnorm4x8(vec4(i.vnLight, ao, 0.0));
-  g |= (hand)? 0x80000000u : 0;
+  uint g = packUnorm4x8(vec4(i.vnLight, i.ao, 0.0));
+  g |= (i.hand)? 0x80000000u : 0;
 
-  uint b = packUnorm4x8(vec4(spAlpha, spF0, emission));
+  uint b = packUnorm4x8(vec4(i.spSmoothness, i.spF0, i.emission, 0.0));
 
   return uvec4(r, g, b, 0u);
 }
 
 FragInfo unpackFragInfo(uvec4 v) {
-  vec2 packedNormal = unpackHalf2x16(v.r);
-  vec3 normal = octaUnpackNormal(packedNormal);
+  vec3 normal = unpackUnorm4x8(v.r).xyz;
 
   vec4 unpackG = unpackUnorm4x8(v.g & 0x00FFFFFFu);
   vec2 vnLight = unpackG.rg;
@@ -56,11 +54,11 @@ FragInfo unpackFragInfo(uvec4 v) {
   bool hand = (v.g & 0x80000000u) != 0u;
 
   vec4 unpackB = unpackUnorm4x8(v.b & 0x00FFFFFFu);
-  float spAlpha = unpackB.r;
+  float spSmoothness = unpackB.r;
   float spF0 = unpackB.g;
   float emission = unpackB.b;
 
-  return FragInfo(normal, vnLight, hand, ao, spAlpha, spF0, emission);
+  return FragInfo(normal, vnLight, ao, hand, spSmoothness, spF0, emission);
 }
 
 #endif
