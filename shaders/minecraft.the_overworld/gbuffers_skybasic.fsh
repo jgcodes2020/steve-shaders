@@ -1,1 +1,1 @@
-#include "/program/geo_emissive.fsh"
+#include "/program/geo_skybasic.fsh"

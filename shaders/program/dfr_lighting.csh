@@ -14,17 +14,19 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
   uvec4 fragInfoPacked = imageLoad(colorimg1, pixelCoords);
   FragInfo i = unpackFragInfo(fragInfoPacked);
 
-  vec2 screenCoords = vec2(pixelCoords) / vec2(viewWidth, viewHeight);
-  float depth = texture(depthtex0, screenCoords).r;
+  if (!i.emissive) {
+    vec2 screenCoords = vec2(pixelCoords) / vec2(viewWidth, viewHeight);
+    float depth = texture(depthtex0, screenCoords).r;
 
-  vec3 ndcPos = fma(vec3(screenCoords, depth), vec3(2.0), vec3(-1.0));
-  vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);
-  vec3 viewDir = -normalize(mat3(gbufferModelViewInverse) * viewPos);
+    vec3 ndcPos = fma(vec3(screenCoords, depth), vec3(2.0), vec3(-1.0));
+    vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);
+    vec3 viewDir = -normalize(mat3(gbufferModelViewInverse) * viewPos);
 
-  vec3 ambientLight, skyLight;
-  ltOverworld_skyColors(ambientLight, skyLight);
+    vec3 ambientLight, skyLight;
+    ltOverworld_skyColors(ambientLight, skyLight);
 
-  color = lt_pbrLighting(color, i, viewDir, ambientLight, skyLight);
+    color = lt_pbrLighting(color, i, viewDir, ambientLight, skyLight);
+  }
 }
 
 void main() {

@@ -28,11 +28,19 @@ float brdfGeometry(float nDotL, float nDotV, float spAlpha) {
 }
 
 float brdfFresnel(float vDotH, float spF0) {
-  return spF0 + (1.0 - spF0) * pow(1.0 - vDotH, 5.0);
+  float vDotH2 = vDotH * vDotH;
+  float vDotH3 = vDotH2 * vDotH;
+  float vDotH5 = vDotH3 * vDotH2;
+
+  return spF0 + (1.0 - spF0) * vDotH5;
 }
 
 vec3 brdfFresnelMetal(float vDotH, vec3 color) {
-  return color + (1.0 - color) * pow(1.0 - vDotH, 5.0);
+  float vDotH2 = vDotH * vDotH;
+  float vDotH3 = vDotH2 * vDotH;
+  float vDotH5 = vDotH3 * vDotH2;
+
+  return color + (1.0 - color) * vDotH5;
 }
 
 // final Cook-Torrance BRDF. Note that this already includes
