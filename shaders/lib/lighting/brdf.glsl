@@ -25,17 +25,13 @@ float brdfGeometry(vec3 normal, vec3 lightDir, vec3 viewDir, float spAlpha) {
   return (numerL * numerV) / (denomL * denomV);
 }
 
-float brdfFresnel(vec3 halfDir, vec3 viewDir, float spF0) {
-  float rhsTerm = 1.0 - clampDot(halfDir, viewDir);
-
-  float rhsTerm2 = rhsTerm * rhsTerm;
-  float rhsTerm3 = rhsTerm2 * rhsTerm;
-  float rhsTerm5 = rhsTerm2 * rhsTerm3;
-
-  return mix(1.0, rhsTerm5, spF0);
+float brdfFresnel(vec3 viewDir, vec3 halfDir, float spF0) {
+  float rhsTerm = 1.0 - clampDot(viewDir, halfDir);
+  return spF0 + (1.0 - spF0) * pow(rhsTerm, 5.0);
 }
 
-// final Cook-Torrance BRDF
+// final Cook-Torrance BRDF. Note that this already includes
+// the N dot L term, so this should not be multiplied in after.
 vec3 brdf(
   vec3 normal, vec3 lightDir, vec3 viewDir, vec3 color, float spAlpha,
   float spF0) {
@@ -47,10 +43,10 @@ vec3 brdf(
   float d = brdfDistribution(normal, halfDir, spAlpha);
   float g = brdfGeometry(normal, lightDir, viewDir, spAlpha);
 
-  float f = brdfFresnel(halfDir, viewDir, spF0);
+  float f = brdfFresnel(viewDir, halfDir, spF0);
 
   vec3 diffuse  = color * nDotL / M_PI;
-  vec3 specular = vec3((d * g) / (4.0 * nDotV));
+  vec3 specular = vec3((d * g) / max(4.0 * nDotV, 0.1));
   return mix(diffuse, specular, f);
 }
 

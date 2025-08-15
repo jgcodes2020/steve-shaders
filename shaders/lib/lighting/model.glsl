@@ -14,9 +14,10 @@ vec3 lt_pbrLighting(vec3 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec
 
   vec3 sunDir = mat3(gbufferModelViewInverse) * (shadowLightPosition * 0.01);
 
+  // return brdf(i.normal, sunDir, viewDir, color, spAlpha, spF0);
+
   // Reflectance due to sunlight. 
-  // Since incoming distribution of sunlight can be modelled as a Dirac delta 
-  // function, we simply evaluate the term at the desired reflectance.
+  // Sunlight only comes from one direction, so we only need to evaluate once.
   {
     vec3 radiance = skyLight;
     vec3 reflectance = brdf(i.normal, sunDir, viewDir, color, spAlpha, spF0);

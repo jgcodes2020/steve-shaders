@@ -18,7 +18,7 @@ DECL_COLORTEX(rgba16f, 0)
 
 // Fragment information buffer.
 // R
-// 31:0  | f16x2 octa_normal; // world-space normal
+// 23:0  | i8x3 normal; // normal vector.
 // G
 //    31 | bool hand;     // first-person hand, requires adjustments.
 // 24:16 | u8 ao;         // ambient occlusion
