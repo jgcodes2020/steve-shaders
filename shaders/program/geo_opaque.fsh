@@ -41,7 +41,7 @@ void main() {
   const bool hand = false;
 
   float spSmoothness = texSpecular.r;
-  float spF0 = clamp(texSpecular.g, 0.0, 229.0 / 255.0);
+  float spF0 = texSpecular.g;
   float emission = clamp(texSpecular.b * (255.0 / 254.0), 0.0, 1.0);
 
   FragInfo i = FragInfo(normal, vnLight, ao, hand, spSmoothness, spF0, emission);

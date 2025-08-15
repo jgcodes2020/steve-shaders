@@ -15,6 +15,6 @@ vec3 reinhardJodie(vec3 v) {
 
 void main() {
 	color = vec4(texture(colortex0, texcoord).rgb, 1.0);
-  // color.rgb = reinhardJodie(color.rgb);
+  color.rgb = reinhardJodie(color.rgb);
   color.rgb = pow(color.rgb, vec3(SRGB_GAMMA_RCP));
 }

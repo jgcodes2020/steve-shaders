@@ -2,19 +2,21 @@
 #define LIGHTING_BRDF_GLSL_INCLUDED
 #include "/lib/math/misc.glsl"
 
-// Trowbridge-Reitz GGX distribution function
-float brdfDistribution(vec3 normal, vec3 halfDir, float spAlpha) {
-  float alpha2 = pow2(spAlpha);
-  float nDotH  = clampDot(normal, halfDir);
+// D, F, and G functions sourced from here: https://learnopengl.com/PBR/Theory
 
-  return alpha2 / (M_PI * pow2(pow2(nDotH) * pow2(alpha2 - 1.0) + 1.0));
+// Trowbridge-Reitz GGX distribution function
+float brdfDistribution(float nDotH, float spAlpha) {
+  float alpha2 = pow2(spAlpha);
+
+  float numer = alpha2;
+  float denom = M_PI * pow2(pow2(nDotH) * (alpha2 - 1.0) + 1.0);
+
+  return numer / denom;
 }
 
 // Schlick-GGX geometry function with Smith's method
-float brdfGeometry(vec3 normal, vec3 lightDir, vec3 viewDir, float spAlpha) {
+float brdfGeometry(float nDotL, float nDotV, float spAlpha) {
   float k     = pow2(spAlpha + 1.0) * 0.125;
-  float nDotL = clampDot(normal, lightDir);
-  float nDotV = clampDot(normal, viewDir);
 
   float numerL = nDotL;
   float denomL = nDotL * (1.0 - k) + k;
@@ -25,9 +27,12 @@ float brdfGeometry(vec3 normal, vec3 lightDir, vec3 viewDir, float spAlpha) {
   return (numerL * numerV) / (denomL * denomV);
 }
 
-float brdfFresnel(vec3 viewDir, vec3 halfDir, float spF0) {
-  float rhsTerm = 1.0 - clampDot(viewDir, halfDir);
-  return spF0 + (1.0 - spF0) * pow(rhsTerm, 5.0);
+float brdfFresnel(float vDotH, float spF0) {
+  return spF0 + (1.0 - spF0) * pow(1.0 - vDotH, 5.0);
+}
+
+vec3 brdfFresnelMetal(float vDotH, vec3 color) {
+  return color + (1.0 - color) * pow(1.0 - vDotH, 5.0);
 }
 
 // final Cook-Torrance BRDF. Note that this already includes
@@ -35,19 +40,29 @@ float brdfFresnel(vec3 viewDir, vec3 halfDir, float spF0) {
 vec3 brdf(
   vec3 normal, vec3 lightDir, vec3 viewDir, vec3 color, float spAlpha,
   float spF0) {
+  const float metalThresh = 229.0 / 255.0;
+
   vec3 halfDir = normalize(lightDir + viewDir);
 
   float nDotL = clampDot(normal, lightDir);
   float nDotV = clampDot(normal, viewDir);
+  float nDotH = clampDot(normal, halfDir);
+  float vDotH = clampDot(viewDir, halfDir);
 
-  float d = brdfDistribution(normal, halfDir, spAlpha);
-  float g = brdfGeometry(normal, lightDir, viewDir, spAlpha);
+  float d = brdfDistribution(nDotH, spAlpha);
+  float g = brdfGeometry(nDotL, nDotV, spAlpha);
 
-  float f = brdfFresnel(viewDir, halfDir, spF0);
-
-  vec3 diffuse  = color * nDotL / M_PI;
-  vec3 specular = vec3((d * g) / max(4.0 * nDotV, 0.1));
-  return mix(diffuse, specular, f);
+  if (spF0 > metalThresh) {
+    // metals do not have diffuse reflection
+    vec3 f = brdfFresnelMetal(vDotH, color);
+    return (d * g * f) / max(4.0 * nDotV, 0.1);
+  }
+  else {
+    float f = brdfFresnel(vDotH, spF0);
+    vec3 diffuse  = color * nDotL / M_PI;
+    vec3 specular = vec3((d * g) / max(4.0 * nDotV, 0.1));
+    return mix(diffuse, specular, f);
+  }
 }
 
 #endif
