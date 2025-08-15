@@ -10,24 +10,20 @@ vec3 lt_pbrLighting(vec3 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec
   float spAlpha = pow2(1.0 - i.spSmoothness);
   float spF0 = i.spF0;
 
-  vec3 result = vec3(0.0);
-
   vec3 sunDir = mat3(gbufferModelViewInverse) * (shadowLightPosition * 0.01);
 
-  // return brdf(i.normal, sunDir, viewDir, color, spAlpha, spF0);
+  vec3 reflected = vec3(0.0);
 
-  // Reflectance due to sunlight. 
-  // Sunlight only comes from one direction, so we only need to evaluate once.
   {
-    vec3 radiance = skyLight;
-    vec3 reflectance = brdf(i.normal, sunDir, viewDir, color, spAlpha, spF0);
-    result += reflectance * radiance;
+    // sunlight reflection
+    reflected += skyLight * brdf(i.normal, sunDir, viewDir, color, spAlpha, spF0);
+    // ambient light
+    reflected += color * (ambientLight * i.ao * i.vnLight.g);
   }
 
-  // ambient light. 
-  result += color * (ambientLight * i.ao * i.vnLight.g);
+  vec3 emitted = color;
 
-  return result;
+  return i.emissive ? emitted : mix(reflected, emitted, i.emission);
 }
 
 #endif

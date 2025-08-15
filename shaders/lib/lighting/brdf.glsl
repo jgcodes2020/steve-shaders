@@ -40,7 +40,8 @@ vec3 brdfFresnelMetal(float vDotH, vec3 color) {
 vec3 brdf(
   vec3 normal, vec3 lightDir, vec3 viewDir, vec3 color, float spAlpha,
   float spF0) {
-  const float metalThresh = 229.0 / 255.0;
+  const float metalThresh = 229.5 / 255.0;
+  const float normCap = 0.01;
 
   vec3 halfDir = normalize(lightDir + viewDir);
 
@@ -55,12 +56,12 @@ vec3 brdf(
   if (spF0 > metalThresh) {
     // metals do not have diffuse reflection
     vec3 f = brdfFresnelMetal(vDotH, color);
-    return (d * g * f) / max(4.0 * nDotV, 0.1);
+    return (d * g * f) / max(4.0 * nDotV, normCap);
   }
   else {
     float f = brdfFresnel(vDotH, spF0);
     vec3 diffuse  = color * nDotL / M_PI;
-    vec3 specular = vec3((d * g) / max(4.0 * nDotV, 0.1));
+    vec3 specular = vec3((d * g) / max(4.0 * nDotV, normCap));
     return mix(diffuse, specular, f);
   }
 }

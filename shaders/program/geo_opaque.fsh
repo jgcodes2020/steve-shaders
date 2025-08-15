@@ -35,15 +35,22 @@ void main() {
   vec2 tbnNormalXY = fma(texNormal.xy, vec2(2.0), vec2(-1.0));
   vec3 tbnNormal = vec3(tbnNormalXY, sqrt(1.0 - dot(tbnNormalXY, tbnNormalXY)));
   vec3 normal = v.gbufferTangentInverse * tbnNormal;
+  
+  const bool emissive = false;
+#ifdef HAND
+  const bool hand = true;
+#else
+  const bool hand = false;
+#endif
 
   vec2 vnLight = v.light;
   float ao = v.ao * texNormal.b;
-  const bool hand = false;
 
   float spSmoothness = texSpecular.r;
   float spF0 = texSpecular.g;
-  float emission = clamp(texSpecular.b * (255.0 / 254.0), 0.0, 1.0);
+  float emission = texSpecular.a;
+  emission = (emission == 1.0)? 0.0 : emission * (255.0 / 254.0);
 
-  FragInfo i = FragInfo(normal, vnLight, ao, hand, spSmoothness, spF0, emission);
+  FragInfo i = FragInfo(normal, emissive, hand, vnLight, ao, spSmoothness, spF0, emission);
   bFragInfo = packFragInfo(i);
 }

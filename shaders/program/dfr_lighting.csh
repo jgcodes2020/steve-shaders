@@ -24,11 +24,7 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
   vec3 ambientLight, skyLight;
   ltOverworld_skyColors(ambientLight, skyLight);
 
-  if (depth < 1.0) {
-    color = lt_pbrLighting(color, i, viewDir, ambientLight, skyLight);
-    // color = vec3(abs(mat3(gbufferModelView) * i.normal));
-  }
-
+  color = lt_pbrLighting(color, i, viewDir, ambientLight, skyLight);
 }
 
 void main() {
