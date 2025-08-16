@@ -7,15 +7,11 @@ in vec4 at_tangent;
 out VertexData {
   vec4 color;
   vec2 uvTex;
-  vec2 light;
-  float ao;
-
-  flat mat3 gbufferTangentInverse;
 }
 v;
-
 
 void main() {
   gl_Position = ftransform();
   v.color = gl_Color;
+  v.uvTex = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
 }

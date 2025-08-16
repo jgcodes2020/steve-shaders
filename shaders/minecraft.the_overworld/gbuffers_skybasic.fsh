@@ -1,2 +1,1 @@
-#define ALPHA_TEST
-#include "/program/geo_opaque.fsh"
+#include "/program/geo_skybasic.fsh"

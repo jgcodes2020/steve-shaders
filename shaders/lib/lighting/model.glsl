@@ -23,7 +23,7 @@ vec3 lt_pbrLighting(vec3 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec
 
   vec3 emitted = color;
 
-  return i.emissive ? emitted : mix(reflected, emitted, i.emission);
+  return mix(reflected, emitted, i.emission);
 }
 
 #endif
