@@ -2,15 +2,8 @@
 
 #include "/lib/common.glsl"
 
-in vec4 at_tangent;
-
 out VertexData {
   vec4 color;
-  vec2 uvTex;
-  vec2 light;
-  float ao;
-
-  flat mat3 gbufferTangentInverse;
 }
 v;
 

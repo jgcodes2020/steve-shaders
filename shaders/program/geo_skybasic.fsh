@@ -7,11 +7,6 @@ uniform sampler2D gtexture;
 
 in VertexData {
   vec4 color;
-  vec2 uvTex;
-  vec2 light;
-  float ao;
-
-  flat mat3 gbufferTangentInverse;
 }
 v;
 
