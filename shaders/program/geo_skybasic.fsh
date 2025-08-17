@@ -10,18 +10,10 @@ in VertexData {
 }
 v;
 
-// naming scheme: bThing = buffer for thing
+// The sky renders first, so the specular buffer is already
+// pre-cleared with the emissive flag.
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 bColor;
-
-const vec4[6] lut = vec4[](
-  vec4(1.0, 0.0, 0.0, 1.0),
-  vec4(1.0, 0.5, 0.0, 1.0),
-  vec4(1.0, 1.0, 0.0, 1.0),
-  vec4(0.0, 0.7, 0.0, 1.0),
-  vec4(0.0, 0.0, 1.0, 1.0),
-  vec4(0.5, 0.0, 1.0, 1.0)
-);
 
 void main() {
   bColor = v.color;

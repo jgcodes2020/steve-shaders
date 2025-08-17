@@ -9,6 +9,7 @@
 vec3 lt_pbrLighting(vec3 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec3 skyLight) {
   // This is empirically determined and can be tweaked as needed.
   const float minAlphaValue = 2.0e-2;
+  // const float minAlphaValue = 0.0;
 
   float spAlpha = max(pow2(1.0 - i.spSmoothness), minAlphaValue);
   float spF0 = i.spF0;

@@ -36,8 +36,7 @@ void ltOverworld_skyColors(out vec3 skyAmbientColor, out vec3 skyLightColor) {
   float nightFactor = ltOverworld_horizonStep(cosSunToUp, nightSatAngle);
 
   skyLightColor = dayFactor * dayLightColor + nightFactor * nightLightColor;
-  skyAmbientColor =
-    dayFactor * dayAmbientColor + nightFactor * nightAmbientColor;
+  skyAmbientColor = mix(nightAmbientColor, dayAmbientColor, smoothstep(nightSatAngle, daySatAngle, cosSunToUp));
   skyAmbientColor = mix(skyAmbientColor, nightVisionAmbientColor, nightVision);
 }
 

@@ -2,7 +2,8 @@
 #define LIGHTING_BRDF_GLSL_INCLUDED
 #include "/lib/math/misc.glsl"
 
-// D, F and G functions sourced from here: https://learnopengl.com/PBR/Theory
+// D, F functions sourced from here: https://learnopengl.com/PBR/Theory
+// G function from the PBR book: https://pbr-book.org/4ed/Reflection_Models/Roughness_Using_Microfacet_Theory#eq:microfacet-masking-shadowing-ross
 
 // GGX distribution function
 float brdfDistribution(float nDotH, float spAlpha) {
@@ -10,29 +11,20 @@ float brdfDistribution(float nDotH, float spAlpha) {
   float nDotH2 = pow2(nDotH);
 
   float dotTerm = fma(nDotH2, alpha2, -nDotH2) + 1.0;
-  float denom = M_PI * pow2(dotTerm);
+  float denom   = M_PI * pow2(dotTerm);
 
   return alpha2 / denom;
 }
 
-// float brdfDistribution(float nDotH, float spAlpha) {
-//   float alpha2 = pow2(spAlpha);
-
-//   float power = 2.0 / alpha2 - 2.0;
-//   float coeff = 1.0 / (M_PI * alpha2);
-
-//   return coeff * pow(nDotH, power);
-// }
-
-// Schlick-GGX geometry function with Smith's method
+// GGX-Schlick geometry function
 float brdfGeometry(float nDotL, float nDotV, float spAlpha) {
   float k = pow2(spAlpha + 1.0) * 0.125;
 
   float numerL = nDotL;
-  float denomL = nDotL * (1.0 - k) + k;
+  float denomL = fma(nDotL, -k, nDotL) + k;
 
   float numerV = nDotV;
-  float denomV = nDotV * (1.0 - k) + k;
+  float denomV = fma(nDotV, -k, nDotV) + k;
 
   return (numerL * numerV) / (denomL * denomV);
 }
@@ -59,7 +51,7 @@ vec3 brdf(
   vec3 normal, vec3 lightDir, vec3 viewDir, vec3 color, float spAlpha,
   float spF0) {
   const float metalThresh = 229.5 / 255.0;
-  const float normCap     = 0.001;
+  const float minNDotV    = 0.001;
 
   vec3 halfDir = normalize(lightDir + viewDir);
 
@@ -74,14 +66,39 @@ vec3 brdf(
   if (spF0 > metalThresh) {
     // metals do not have diffuse reflection
     vec3 f = brdfFresnelMetal(vDotH, color);
-    return (d * g * f) / max(4.0 * nDotV, normCap);
+    return (d * g * f) / max(4.0 * nDotV, minNDotV);
   }
   else {
     float f       = brdfFresnel(vDotH, spF0);
     vec3 diffuse  = color * nDotL / M_PI;
-    vec3 specular = vec3((d * g * f) / max(4.0 * nDotV, normCap));
+    vec3 specular = vec3((d * g * f) / max(4.0 * nDotV, minNDotV));
     return diffuse * (1.0 - f) + specular;
   }
+}
+
+// BSDF for non-refracting transparent materials.
+// This does not check for metals, because metals absorb refracted light
+// and thus can't be transparent.
+vec4 bsdf(
+  vec3 normal, vec3 lightDir, vec3 viewDir, vec4 color, float spAlpha,
+  float spF0) {
+  const float minNDotV    = 0.001;
+
+  vec3 halfDir = normalize(lightDir + viewDir);
+
+  float nDotL = clampDot(normal, lightDir);
+  float nDotV = clampDot(normal, viewDir);
+  float nDotH = clampDot(normal, halfDir);
+  float vDotH = clampDot(viewDir, halfDir);
+
+  float d = brdfDistribution(nDotH, spAlpha);
+  float g = brdfGeometry(nDotL, nDotV, spAlpha);
+  float f = brdfFresnel(vDotH, spF0);
+
+  vec4 transmitted = color;
+  vec4 specular    = vec4(vec3((d * g) / max(4.0 * nDotV, minNDotV)), 1.0);
+
+  return mix(transmitted, specular, f);
 }
 
 vec3 diffuse(
