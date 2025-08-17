@@ -7,8 +7,8 @@ const vec3 ambientColor    = vec3(0.1);
 const vec3 dayLightColor   = vec3(2.0);
 const vec3 dayAmbientColor = vec3(0.4, 0.4, 0.4);
 
-const vec3 nightLightColor   = vec3(0.02, 0.05, 0.1);
-const vec3 nightAmbientColor = vec3(0.05, 0.05, 0.05);
+const vec3 nightLightColor   = vec3(0.06, 0.08, 0.2);
+const vec3 nightAmbientColor = vec3(0.02);
 
 const vec3 nightVisionAmbientColor = vec3(0.5, 0.5, 0.5);
 

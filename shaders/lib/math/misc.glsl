@@ -21,17 +21,22 @@ float clampDot(vec3 x, vec3 y) {
 float pow2(float x) {
   return x * x;
 }
-// Squares a number.
 vec2 pow2(vec2 x) {
   return x * x;
 }
-// Squares a number.
 vec3 pow2(vec3 x) {
   return x * x;
 }
-// Squares a number.
 vec4 pow2(vec4 x) {
   return x * x;
+}
+
+// Returns 1 with the sign bit copied from x.
+float signFast(float x) {
+  const uint FLOAT_ONE = 0x3f800000u;
+  uint i = floatBitsToUint(x);
+  i = bitfieldInsert(i, FLOAT_ONE, 0, 31);
+  return uintBitsToFloat(i);
 }
 
 #endif

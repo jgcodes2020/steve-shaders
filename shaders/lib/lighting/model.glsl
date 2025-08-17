@@ -7,7 +7,10 @@
 #include "/lib/pack.glsl"
 
 vec3 lt_pbrLighting(vec3 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec3 skyLight) {
-  float spAlpha = pow2(1.0 - i.spSmoothness);
+  // This is empirically determined and can be tweaked as needed.
+  const float minAlphaValue = 2.0e-2;
+
+  float spAlpha = max(pow2(1.0 - i.spSmoothness), minAlphaValue);
   float spF0 = i.spF0;
 
   vec3 sunDir = mat3(gbufferModelViewInverse) * (shadowLightPosition * 0.01);

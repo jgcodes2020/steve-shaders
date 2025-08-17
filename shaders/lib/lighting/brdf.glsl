@@ -2,21 +2,31 @@
 #define LIGHTING_BRDF_GLSL_INCLUDED
 #include "/lib/math/misc.glsl"
 
-// D, F, and G functions sourced from here: https://learnopengl.com/PBR/Theory
+// D, F and G functions sourced from here: https://learnopengl.com/PBR/Theory
 
-// Trowbridge-Reitz GGX distribution function
+// GGX distribution function
 float brdfDistribution(float nDotH, float spAlpha) {
   float alpha2 = pow2(spAlpha);
+  float nDotH2 = pow2(nDotH);
 
-  float numer = alpha2;
-  float denom = M_PI * pow2(pow2(nDotH) * (alpha2 - 1.0) + 1.0);
+  float dotTerm = fma(nDotH2, alpha2, -nDotH2) + 1.0;
+  float denom = M_PI * pow2(dotTerm);
 
-  return numer / denom;
+  return alpha2 / denom;
 }
+
+// float brdfDistribution(float nDotH, float spAlpha) {
+//   float alpha2 = pow2(spAlpha);
+
+//   float power = 2.0 / alpha2 - 2.0;
+//   float coeff = 1.0 / (M_PI * alpha2);
+
+//   return coeff * pow(nDotH, power);
+// }
 
 // Schlick-GGX geometry function with Smith's method
 float brdfGeometry(float nDotL, float nDotV, float spAlpha) {
-  float k     = pow2(spAlpha + 1.0) * 0.125;
+  float k = pow2(spAlpha + 1.0) * 0.125;
 
   float numerL = nDotL;
   float denomL = nDotL * (1.0 - k) + k;
@@ -28,7 +38,7 @@ float brdfGeometry(float nDotL, float nDotV, float spAlpha) {
 }
 
 float brdfFresnel(float vDotH, float spF0) {
-  float rhsTerm = 1.0 - vDotH;
+  float rhsTerm  = 1.0 - vDotH;
   float rhsTerm2 = pow2(rhsTerm);
   float rhsTerm5 = rhsTerm2 * rhsTerm2 * rhsTerm;
 
@@ -36,7 +46,7 @@ float brdfFresnel(float vDotH, float spF0) {
 }
 
 vec3 brdfFresnelMetal(float vDotH, vec3 color) {
-  float rhsTerm = 1.0 - vDotH;
+  float rhsTerm  = 1.0 - vDotH;
   float rhsTerm2 = pow2(rhsTerm);
   float rhsTerm5 = rhsTerm2 * rhsTerm2 * rhsTerm;
 
@@ -49,7 +59,7 @@ vec3 brdf(
   vec3 normal, vec3 lightDir, vec3 viewDir, vec3 color, float spAlpha,
   float spF0) {
   const float metalThresh = 229.5 / 255.0;
-  const float normCap = 0.01;
+  const float normCap     = 0.001;
 
   vec3 halfDir = normalize(lightDir + viewDir);
 
@@ -67,11 +77,18 @@ vec3 brdf(
     return (d * g * f) / max(4.0 * nDotV, normCap);
   }
   else {
-    float f = brdfFresnel(vDotH, spF0);
+    float f       = brdfFresnel(vDotH, spF0);
     vec3 diffuse  = color * nDotL / M_PI;
-    vec3 specular = vec3((d * g) / max(4.0 * nDotV, normCap));
-    return mix(diffuse, specular, f);
+    vec3 specular = vec3((d * g * f) / max(4.0 * nDotV, normCap));
+    return diffuse * (1.0 - f) + specular;
   }
+}
+
+vec3 diffuse(
+  vec3 normal, vec3 lightDir, vec3 viewDir, vec3 color, float spAlpha,
+  float spF0) {
+  float nDotL = clampDot(normal, lightDir);
+  return color * nDotL / M_PI;
 }
 
 #endif
