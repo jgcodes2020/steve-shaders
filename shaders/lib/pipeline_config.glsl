@@ -1,12 +1,22 @@
 #ifndef PIPELINE_CONFIG_GLSL_INCLUDED
 #define PIPELINE_CONFIG_GLSL_INCLUDED
 
+// COMPOSITE COLOUR BUFFERS
+// ==================================
+
 #ifdef COMPUTE_SHADER
 #define DECL_COLORTEX(format, n) layout(format) uniform image2D colorimg##n;
 #define DECL_COLORTEX_U(format, n) layout(format) uniform uimage2D colorimg##n;
 #else
 #define DECL_COLORTEX(format, n) uniform sampler2D colortex##n;
 #define DECL_COLORTEX_U(format, n) uniform usampler2D colortex##n;
+
+#endif
+
+#ifdef SHADOW_COMPUTE_SHADER
+#define DECL_SHADOWCOLOR(format, n) layout(format) uniform image2D shadowcolorimg##n;
+#else
+#define DECL_SHADOWCOLOR(format, n) uniform sampler2D shadowcolor##n;
 #endif
 
 // Composite colour buffer.
@@ -44,4 +54,40 @@ const vec4 colortex1ClearColor = vec4(1073741824.0, 0.0, 0.0, 0.0);
 */
 DECL_COLORTEX_U(rgba32ui, 1)
 
+
+// SHADOW COLOUR BUFFERS
+// ==================================
+
+/*
+const int shadowcolor0Format = RGBA16F;
+*/
+DECL_SHADOWCOLOR(rgba16f, 0)
+
+
 #undef DECL_COLORTEX
+#undef DECL_SHADOWCOLOR
+
+// SHADOW DEPTH TEXTURES
+// ==================================
+
+const int shadowMapResolution      = 2048;
+const float shadowDistance         = 160.0;
+const bool shadowHardwareFiltering = true;
+
+uniform sampler2DShadow shadowtex0;  // shadow distance
+uniform sampler2DShadow shadowtex1;  // shadow distance (opaque)
+
+// NOISE TEXTURE
+// ==================================
+
+const int noiseTextureResolution = 256;
+
+uniform sampler2D noisetex;  // noise
+
+// DEPTH BUFFERS
+// ==================================
+uniform sampler2D depthtex0;  // depth
+uniform sampler2D depthtex1;  // depth (opaque)
+
+
+#endif

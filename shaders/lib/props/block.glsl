@@ -7,4 +7,9 @@ bool bp_isPlant(int id) {
 }
 
 
+bool bp_isTintedGlass(int id) {
+    return id == 1001;
+}
+
+
 #endif // PROPS_BLOCK_GLSL_INCLUDED

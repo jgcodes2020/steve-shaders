@@ -1,14 +1,6 @@
 #ifndef UNIFORMS_GLSL_INCLUDED
 #define UNIFORMS_GLSL_INCLUDED
 
-uniform sampler2D depthtex0;  // depth
-uniform sampler2D depthtex1;  // depth (opaque)
-
-uniform sampler2DShadow shadowtex0;  // shadow distance
-uniform sampler2DShadow shadowtex1;  // shadow distance (opaque)
-
-uniform sampler2D noisetex;  // noise
-
 uniform mat4 gbufferModelView;          // world -> view
 uniform mat4 gbufferProjectionInverse;  // NDC -> view
 uniform mat4 gbufferModelViewInverse;   // view -> world

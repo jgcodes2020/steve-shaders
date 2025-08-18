@@ -1,7 +1,7 @@
 #version 460 compatibility
 
 #include "/lib/common.glsl"
-#include "/lib/buffers.glsl"
+#include "/lib/props/block.glsl"
 
 uniform sampler2D gtexture;
 uniform sampler2D normals;
@@ -10,16 +10,22 @@ uniform sampler2D specular;
 in VertexData {
   vec4 color;
   vec2 uvTex;
+  flat int entityID;
 }
 v;
 
 // naming scheme: bThing = buffer for thing
-/* RENDERTARGETS: 0,1 */
+/* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 bColor;
-layout(location = 1) out uvec4 bFragInfo;
 
 void main() {
+  // This implements purely opaque shadowing with support for one transparent occluder.
+  // Transparent shadows are handled by considering the frontmost surface.
   bColor = texture(gtexture, v.uvTex) * v.color;
-  if (bColor.a < alphaTestRef)
+  if (bColor.a < alphaTestRef) {
     discard;
+  }
+  if (bp_isTintedGlass(v.entityID)) {
+    bColor.a = 1.0;
+  }
 }

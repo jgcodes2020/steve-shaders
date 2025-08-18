@@ -19,6 +19,7 @@ def main():
 
     mapping = bw.BlockMapping.solve({
         "plant": Bool(tags["plant/thin"], materials=DHMaterial.DH_NONE),
+        "tinted_glass": Bool(bw.blocks("minecraft:tinted_glass")),
     }, config=config)
 
     flag_values: dict[str, dict[Any, list[int]]] = {}

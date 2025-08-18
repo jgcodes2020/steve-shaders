@@ -31,12 +31,26 @@ vec4 pow2(vec4 x) {
   return x * x;
 }
 
-// Returns 1 with the sign bit copied from x.
-float signFast(float x) {
-  const uint FLOAT_ONE = 0x3f800000u;
-  uint i = floatBitsToUint(x);
-  i = bitfieldInsert(i, FLOAT_ONE, 0, 31);
-  return uintBitsToFloat(i);
+// Computes the L4 norm, that is (x^4 + y^4)^(1/4).
+float l4norm(vec2 x) {
+  vec2 x2 = x * x;
+  return sqrt(sqrt(dot(x2, x2)));
 }
+float l4norm(vec3 x) {
+  vec3 x2 = x * x;
+  return sqrt(sqrt(dot(x2, x2)));
+}
+float l4norm(vec4 x) {
+  vec4 x2 = x * x;
+  return sqrt(sqrt(dot(x2, x2)));
+}
+
+// Returns 1 with the sign bit copied from x.
+// float signFast(float x) {
+//   const uint FLOAT_ONE = 0x3f800000u;
+//   uint i = floatBitsToUint(x);
+//   i = bitfieldInsert(i, FLOAT_ONE, 0, 31);
+//   return uintBitsToFloat(i);
+// }
 
 #endif

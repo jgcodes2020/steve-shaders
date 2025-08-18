@@ -14,4 +14,9 @@ vec3 txProjective(mat4 matrix, vec3 point) {
   return clip.xyz / clip.w;
 }
 
+// vec3 clipToScreen(vec4 clipPos) {
+//   vec3 ndcPos = clipPos.xyz / clipPos.w;
+//   return fma(ndcPos, vec3(0.5), vec3(0.5));
+// }
+
 #endif

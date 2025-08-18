@@ -73,7 +73,7 @@ uvec4 packFragInfo(FragInfo i) {
 
 // Unpacks a FragInfo from a uvec4.
 FragInfo unpackFragInfo(uvec4 v) {
-  vec3 normal = unpackSnorm4x8(v.r).xyz;
+  vec3 normal = normalize(unpackSnorm4x8(v.r).xyz);
 
   vec4 unpackG  = unpackUnorm4x8(v.g & 0x00FFFFFFu);
   vec2 vnLight  = unpackG.rg;

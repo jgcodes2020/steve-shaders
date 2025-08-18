@@ -5,6 +5,7 @@
 #include "/lib/buffers.glsl"
 
 #include "/lib/lighting/model.glsl"
+#include "/lib/lighting/shadow.glsl"
 #include "/lib/lighting/overworld.glsl"
 
 layout (local_size_x = 16, local_size_y = 16) in;
@@ -18,14 +19,28 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
     vec2 screenCoords = vec2(pixelCoords) / vec2(viewWidth, viewHeight);
     float depth = texture(depthtex0, screenCoords).r;
 
+    // compute NDC; accounting for the hand being shifted during projection
     vec3 ndcPos = fma(vec3(screenCoords, depth), vec3(2.0), vec3(-1.0));
+    // if (i.hand) {
+    //   ndcPos.z /= MC_HAND_DEPTH;
+    // }
+
+    // derive other coordinates from NDC position
     vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);
+    vec3 feetPos = txAffine(gbufferModelViewInverse, viewPos);
+    vec3 shadowViewPos = txAffine(shadowModelView, feetPos);
+
+    // direction from pixel to camera.
     vec3 viewDir = -normalize(mat3(gbufferModelViewInverse) * viewPos);
+
+    // shadow clip-space position of this pixel.
+    vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
+    vec3 shadow = computeShadowSoft(shadowClipPos, i.normal, pixelCoords);
 
     vec3 ambientLight, skyLight;
     ltOverworld_skyColors(ambientLight, skyLight);
 
-    color = pbrLightingOpaque(color, i, viewDir, ambientLight, skyLight, blockLightColor);
+    color = pbrLightingOpaque(color, i, viewDir, shadow, ambientLight, skyLight, blockLightColor);
   }
 }
 
