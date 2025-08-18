@@ -29,7 +29,9 @@ void main() {
   if (bColor.a < alphaTestRef)
     discard;
 #endif
+  bColor.rgb = pow(bColor.rgb, vec3(SRGB_GAMMA));
 
+  // premultiply alpha
   bColor.rgb *= bColor.a;
 
   vec4 texSpecular = texture(specular, v.uvTex);
