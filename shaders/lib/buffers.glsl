@@ -48,7 +48,7 @@ FragInfo fragInfoFromTextures(vec4 texSpecular, vec4 texNormal, vec2 vnLight, fl
   const bool hand = false;
 #endif
 
-  ao = ao * pow(texNormal.b, SRGB_GAMMA_RCP);
+  ao = pow(ao, SRGB_GAMMA) * texNormal.b;
 
   float spSmoothness = texSpecular.r;
   float spF0 = texSpecular.g;

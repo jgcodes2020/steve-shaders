@@ -100,11 +100,14 @@ vec4 brdfTranslucent(
   float d = brdfDistribution(nDotH, spAlpha);
   float g = brdfGeometry(nDotL, nDotV, spAlpha);
 
-  float f       = brdfFresnel(vDotH, spF0);
+  // Specular highlights only happen when we're within the normal hemisphere.
+  // The diffuse term already accounts for the lack of lighting.
+  float f = (nDotV > 0.0) ? brdfFresnel(vDotH, spF0) : 0.0;
+
   vec4 diffuse  = vec4(color.rgb * nDotL / M_PI, color.a);
-  vec4 specular = vec4(vec3((d * g) / max(4.0 * nDotV, minNDotV)), 1.0);
+  vec4 specular = vec4((d * g) / max(4.0 * nDotV, minNDotV));
+
   return mix(diffuse, specular, f);
 }
-
 
 #endif

@@ -29,7 +29,7 @@ vec3 pbrLightingOpaque(
     reflected +=
       skyLight * brdfOpaque(i.normal, sunDir, viewDir, color, spAlpha, spF0);
     // ambient light
-    reflected += color * (ambientLight * i.ao);
+    reflected += color * (M_PI / 2) * (ambientLight * i.ao);
     // block light
     reflected += color * (blockLight * vnLight.r);
   }
@@ -40,13 +40,16 @@ vec3 pbrLightingOpaque(
 }
 
 vec4 pbrLightingTranslucent(
-  vec4 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec3 skyLight,
+  vec4 color, FragInfo i, vec3 viewDir, vec3 shadow, vec3 ambientLight, vec3 skyLight,
   vec3 blockLight) {
   float spAlpha = max(pow2(1.0 - i.spSmoothness), pbrMinAlphaValue);
   float spF0    = i.spF0;
 
   vec3 sunDir  = mat3(gbufferModelViewInverse) * (shadowLightPosition * 0.01);
   vec2 vnLight = pow(i.vnLight, vec2(SRGB_GAMMA));
+
+  // account for skylight being blocked
+  skyLight *= shadow;
 
   vec4 reflected = vec4(0.0);
   {
@@ -55,7 +58,7 @@ vec4 pbrLightingTranslucent(
       brdfTranslucent(i.normal, sunDir, viewDir, color, spAlpha, spF0);
     reflected += vec4(skyReflectance.rgb * skyLight, skyReflectance.a);
     // ambient light
-    reflected.rgb += color.rgb * (ambientLight * i.ao * vnLight.g);
+    reflected.rgb += color.rgb * (M_PI / 2) * (ambientLight * i.ao * vnLight.g);
     // block light
     reflected.rgb += color.rgb * (blockLight * vnLight.r);
   }

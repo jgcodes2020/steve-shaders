@@ -21,9 +21,9 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
 
     // compute NDC; accounting for the hand being shifted during projection
     vec3 ndcPos = fma(vec3(screenCoords, depth), vec3(2.0), vec3(-1.0));
-    // if (i.hand) {
-    //   ndcPos.z /= MC_HAND_DEPTH;
-    // }
+    if (i.hand) {
+      ndcPos.z /= MC_HAND_DEPTH;
+    }
 
     // derive other coordinates from NDC position
     vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);

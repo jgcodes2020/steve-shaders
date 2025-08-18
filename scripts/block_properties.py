@@ -5,7 +5,7 @@ from pathlib import Path
 import textwrap as tw
 import caseconverter as cc
 
-ROOT_FOLDER = Path(__file__).parent
+ROOT_FOLDER = Path(__file__).parents[1]
 
 def main():
     tags = bw.load_tags()
