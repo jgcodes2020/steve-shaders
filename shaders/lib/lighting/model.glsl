@@ -4,12 +4,11 @@
 #include "/lib/lighting/brdf.glsl"
 #include "/lib/math/misc.glsl"
 #include "/lib/uniforms.glsl"
-#include "/lib/pack.glsl"
+#include "/lib/buffers.glsl"
 
-vec3 lt_pbrLighting(vec3 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec3 skyLight) {
+vec3 pbrLightingOpaque(vec3 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec3 skyLight) {
   // This is empirically determined and can be tweaked as needed.
   const float minAlphaValue = 2.0e-2;
-  // const float minAlphaValue = 0.0;
 
   float spAlpha = max(pow2(1.0 - i.spSmoothness), minAlphaValue);
   float spF0 = i.spF0;
@@ -17,10 +16,9 @@ vec3 lt_pbrLighting(vec3 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec
   vec3 sunDir = mat3(gbufferModelViewInverse) * (shadowLightPosition * 0.01);
 
   vec3 reflected = vec3(0.0);
-
   {
     // sunlight reflection
-    reflected += skyLight * brdf(i.normal, sunDir, viewDir, color, spAlpha, spF0);
+    reflected += skyLight * brdfOpaque(i.normal, sunDir, viewDir, color, spAlpha, spF0);
     // ambient light
     reflected += color * (ambientLight * i.ao * i.vnLight.g);
   }
@@ -30,4 +28,24 @@ vec3 lt_pbrLighting(vec3 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec
   return mix(reflected, emitted, i.emission);
 }
 
+vec4 pbrLightingTranslucent(vec4 color, FragInfo i, vec3 viewDir, vec3 ambientLight, vec3 skyLight) {
+  // This is empirically determined and can be tweaked as needed.
+  const float minAlphaValue = 2.0e-2;
+
+  float spAlpha = max(pow2(1.0 - i.spSmoothness), minAlphaValue);
+  float spF0 = i.spF0;
+
+  vec3 sunDir = mat3(gbufferModelViewInverse) * (shadowLightPosition * 0.01);
+
+  vec4 reflected = vec4(0.0);
+  {
+    // sunlight reflection
+    vec4 skyReflectance = brdfTranslucent(i.normal, sunDir, viewDir, color, spAlpha, spF0);
+    reflected += vec4(skyReflectance.rgb * skyLight, skyReflectance.a);
+    // ambient light
+    reflected.rgb += color.rgb * (ambientLight * i.ao * i.vnLight.g);
+  }
+
+  return reflected;
+}
 #endif

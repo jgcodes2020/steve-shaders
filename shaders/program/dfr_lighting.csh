@@ -2,7 +2,7 @@
 
 #define COMPUTE_SHADER
 #include "/lib/common.glsl"
-#include "/lib/pack.glsl"
+#include "/lib/buffers.glsl"
 
 #include "/lib/lighting/model.glsl"
 #include "/lib/lighting/overworld.glsl"
@@ -25,7 +25,7 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
     vec3 ambientLight, skyLight;
     ltOverworld_skyColors(ambientLight, skyLight);
 
-    color = lt_pbrLighting(color, i, viewDir, ambientLight, skyLight);
+    color = pbrLightingOpaque(color, i, viewDir, ambientLight, skyLight);
   }
 }
 

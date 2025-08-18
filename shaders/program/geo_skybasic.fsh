@@ -1,7 +1,7 @@
 #version 460 compatibility
 
 #include "/lib/common.glsl"
-#include "/lib/pack.glsl"
+#include "/lib/buffers.glsl"
 
 uniform sampler2D gtexture;
 

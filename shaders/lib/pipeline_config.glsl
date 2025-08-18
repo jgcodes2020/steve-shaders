@@ -37,7 +37,7 @@ DECL_COLORTEX(rgba16f, 0)
 // 24:16 | u8 emission; // light sources, etc.
 // 15:8  | u8 sp_f0;    // fresnel/metal
 //  7:0  | u8 sp_alpha; // roughness
-// See PACK_PURE_EMISSIVE in pack.glsl for the clear colour.
+// See PACK_PURE_EMISSIVE in buffers.glsl for the clear colour.
 /*
 const int colortex1Format = RGBA32UI;
 const vec4 colortex1ClearColor = vec4(1073741824.0, 0.0, 0.0, 0.0);

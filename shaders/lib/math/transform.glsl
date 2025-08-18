@@ -1,6 +1,8 @@
 #ifndef MATH_TRANSFORM_GLSL_INCLUDED
 #define MATH_TRANSFORM_GLSL_INCLUDED
 
+// Random math functions that are generally useful for linear algebra stuff.
+
 // Performs an affine transformation on a point.
 vec3 txAffine(mat4 matrix, vec3 point) {
   return mat3(matrix) * point + matrix[3].xyz;

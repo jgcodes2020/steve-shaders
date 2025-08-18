@@ -3,7 +3,8 @@
 #include "/lib/math/misc.glsl"
 
 // D, F functions sourced from here: https://learnopengl.com/PBR/Theory
-// G function from the PBR book: https://pbr-book.org/4ed/Reflection_Models/Roughness_Using_Microfacet_Theory#eq:microfacet-masking-shadowing-ross
+// G function from the PBR book:
+// https://pbr-book.org/4ed/Reflection_Models/Roughness_Using_Microfacet_Theory#eq:microfacet-masking-shadowing-ross
 
 // GGX distribution function
 float brdfDistribution(float nDotH, float spAlpha) {
@@ -29,6 +30,7 @@ float brdfGeometry(float nDotL, float nDotV, float spAlpha) {
   return (numerL * numerV) / (denomL * denomV);
 }
 
+// Schlick's approximation (scalar F0)
 float brdfFresnel(float vDotH, float spF0) {
   float rhsTerm  = 1.0 - vDotH;
   float rhsTerm2 = pow2(rhsTerm);
@@ -37,6 +39,7 @@ float brdfFresnel(float vDotH, float spF0) {
   return spF0 + (1.0 - spF0) * rhsTerm5;
 }
 
+// Schlick's approximation (coloured F0)
 vec3 brdfFresnelMetal(float vDotH, vec3 color) {
   float rhsTerm  = 1.0 - vDotH;
   float rhsTerm2 = pow2(rhsTerm);
@@ -45,9 +48,9 @@ vec3 brdfFresnelMetal(float vDotH, vec3 color) {
   return color + (1.0 - color) * rhsTerm5;
 }
 
-// final Cook-Torrance BRDF. Note that this already includes
+// Cook-Torrance BRDF for opaque surfaces. Note that this already includes
 // the N dot L term, so this should not be multiplied in after.
-vec3 brdf(
+vec3 brdfOpaque(
   vec3 normal, vec3 lightDir, vec3 viewDir, vec3 color, float spAlpha,
   float spF0) {
   const float metalThresh = 229.5 / 255.0;
@@ -64,24 +67,27 @@ vec3 brdf(
   float g = brdfGeometry(nDotL, nDotV, spAlpha);
 
   if (spF0 > metalThresh) {
-    // metals do not have diffuse reflection
+    // metals do not have diffuse reflection.
+    // only compute specular.
     vec3 f = brdfFresnelMetal(vDotH, color);
     return (d * g * f) / max(4.0 * nDotV, minNDotV);
   }
   else {
+    // Assume all refracted light is eventually diffusely reflected or absorbed.
     float f       = brdfFresnel(vDotH, spF0);
     vec3 diffuse  = color * nDotL / M_PI;
-    vec3 specular = vec3((d * g * f) / max(4.0 * nDotV, minNDotV));
-    return diffuse * (1.0 - f) + specular;
+    vec3 specular = vec3((d * g) / max(4.0 * nDotV, minNDotV));
+    return mix(diffuse, specular, f);
   }
 }
 
-// BSDF for non-refracting transparent materials.
-// This does not check for metals, because metals absorb refracted light
-// and thus can't be transparent.
-vec4 bsdf(
+// Cook-Torrance BRDF for translucent surfaces. Note that this already includes
+// the N dot L term, so this should not be multiplied in after.
+// This is *super* rough and definitely not very accurate.
+vec4 brdfTranslucent(
   vec3 normal, vec3 lightDir, vec3 viewDir, vec4 color, float spAlpha,
   float spF0) {
+  const float metalThresh = 229.5 / 255.0;
   const float minNDotV    = 0.001;
 
   vec3 halfDir = normalize(lightDir + viewDir);
@@ -93,19 +99,12 @@ vec4 bsdf(
 
   float d = brdfDistribution(nDotH, spAlpha);
   float g = brdfGeometry(nDotL, nDotV, spAlpha);
-  float f = brdfFresnel(vDotH, spF0);
 
-  vec4 transmitted = color;
-  vec4 specular    = vec4(vec3((d * g) / max(4.0 * nDotV, minNDotV)), 1.0);
-
-  return mix(transmitted, specular, f);
+  float f       = brdfFresnel(vDotH, spF0);
+  vec4 diffuse  = vec4(color.rgb * nDotL / M_PI, color.a);
+  vec4 specular = vec4(vec3((d * g) / max(4.0 * nDotV, minNDotV)), 1.0);
+  return mix(diffuse, specular, f);
 }
 
-vec3 diffuse(
-  vec3 normal, vec3 lightDir, vec3 viewDir, vec3 color, float spAlpha,
-  float spF0) {
-  float nDotL = clampDot(normal, lightDir);
-  return color * nDotL / M_PI;
-}
 
 #endif

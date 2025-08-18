@@ -3,10 +3,10 @@
 
 // x^(2.2) and x^(1/2.2) are approximations of the sRGB
 // transfer function, but it's good enough.
-
 const float SRGB_GAMMA = 2.2;
 const float SRGB_GAMMA_RCP = 1.0 / 2.2;
 
+// pi, ratio of circle's perimeter to its diameter.
 const float M_PI = 3.1415926;
 
 // Coefficients for measuring luma/luminance.
