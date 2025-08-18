@@ -50,6 +50,6 @@ void main() {
     vec3 ambientLight, skyLight;
     ltOverworld_skyColors(ambientLight, skyLight);
 
-    bColor = pbrLightingTranslucent(bColor, i, viewDir, ambientLight, skyLight);
+    bColor = pbrLightingTranslucent(bColor, i, viewDir, ambientLight, skyLight, blockLightColor);
   }
 }

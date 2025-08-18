@@ -25,7 +25,7 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
     vec3 ambientLight, skyLight;
     ltOverworld_skyColors(ambientLight, skyLight);
 
-    color = pbrLightingOpaque(color, i, viewDir, ambientLight, skyLight);
+    color = pbrLightingOpaque(color, i, viewDir, ambientLight, skyLight, blockLightColor);
   }
 }
 
