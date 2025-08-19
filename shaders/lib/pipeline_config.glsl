@@ -19,6 +19,12 @@
 #define DECL_SHADOWCOLOR(format, n) uniform sampler2D shadowcolor##n;
 #endif
 
+#ifdef LOOKUP_COMPUTE_SHADER
+#define DECL_LOOKUPTEX(format, name) layout(format) uniform image2D img_##name;
+#else
+#define DECL_LOOKUPTEX(format, name) uniform sampler2D tex_##name;
+#endif
+
 // Composite colour buffer.
 // R
 // 16:0  | f16 color_r;
@@ -62,6 +68,11 @@ DECL_COLORTEX_U(rgba32ui, 1)
 const int shadowcolor0Format = RGBA16F;
 */
 DECL_SHADOWCOLOR(rgba16f, 0)
+
+// CUSTOM BUFFERS
+// ==================================
+
+DECL_LOOKUPTEX(rg16f, brdfLut)
 
 
 #undef DECL_COLORTEX

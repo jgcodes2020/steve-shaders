@@ -31,6 +31,24 @@ vec4 pow2(vec4 x) {
   return x * x;
 }
 
+// Raises a number to the 5th power.
+float pow5(float x) {
+  float x2 = x * x;
+  return x2 * x2 * x;
+}
+vec2 pow5(vec2 x) {
+  vec2 x2 = x * x;
+  return x2 * x2 * x;
+}
+vec3 pow5(vec3 x) {
+  vec3 x2 = x * x;
+  return x2 * x2 * x;
+}
+vec4 pow5(vec4 x) {
+  vec4 x2 = x * x;
+  return x2 * x2 * x;
+}
+
 // Computes the L4 norm, that is (x^4 + y^4)^(1/4).
 float l4norm(vec2 x) {
   vec2 x2 = x * x;
