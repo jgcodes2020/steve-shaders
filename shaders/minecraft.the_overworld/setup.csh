@@ -1,1 +1,0 @@
-#include "/program/lut_brdf.csh"

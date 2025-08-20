@@ -22,16 +22,20 @@ vec3 pbrLightingOpaque(
 
   // account for skylight being blocked
   skyLight *= shadow;
+  ambientLight *= i.ao * vnLight.g;
+  blockLight *= vnLight.r;
 
   vec3 reflected = vec3(0.0);
   {
     // sunlight reflection
     reflected +=
       skyLight * brdfOpaque(i.normal, sunDir, viewDir, color, spAlpha, spF0);
+
+    vec3 ambientReflectance = trfAmbient(i.normal, viewDir, color, spAlpha, spF0);
     // ambient light
-    reflected += color * (M_PI / 2) * (ambientLight * i.ao);
+    reflected += ambientLight * ambientReflectance;
     // block light
-    reflected += color * (blockLight * vnLight.r);
+    reflected += blockLight * ambientReflectance;
   }
 
   vec3 emitted = color;

@@ -114,7 +114,6 @@ vec4 brdfTranslucent(
   return mix(diffuse, specular, f);
 }
 
-#ifndef LOOKUP_COMPUTE_SHADER
 
 // Schlick's approximation with roughness correction (scalar F0)
 float brdfFresnelAmbient(float nDotV, float spAlpha, float spF0) {
@@ -126,25 +125,19 @@ vec3 brdfFresnelMetalAmbient(float nDotV, vec3 color, float spAlpha) {
   return color + (max(vec3(1.0 - spAlpha), color) - color) * pow5(1.0 - nDotV);
 }
 
-// Total Reflectance Function for ambient light. This depends on the
-// lookup table computed in /program/lut_brdf.csh
+// Total Reflectance Function for ambient light. This is mostly chosen
+// on a stylistic basis.
 vec3 trfAmbient(
   vec3 normal, vec3 viewDir, vec3 color, float spAlpha, float spF0) {
-  float nDotV = clampDot(normal, viewDir);
-  vec2 brdfLut = texture(tex_brdfLut, vec2(nDotV, spAlpha)).rg;
-
   if (spF0 > brdfMetalThresh) {
-    vec3 f = brdfFresnelMetalAmbient(nDotV, color, spAlpha);
-    return f * brdfLut.x + brdfLut.y;
+    // This is purely stylized and designed to look good.
+    vec3 colorTerm = color * sqrt(color);
+    return colorTerm * 0.5;
   }
   else {
-    float f = brdfFresnelAmbient(nDotV, spAlpha, spF0);
-    vec3 diffuse = color;
-    vec3 specular = vec3(f * brdfLut.x + brdfLut.y);
-    return mix(diffuse, specular, f);
+    // This assumes pure diffuse reflectance.
+    return color;
   }
 }
-
-#endif
 
 #endif
