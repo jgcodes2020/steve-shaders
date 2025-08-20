@@ -36,6 +36,7 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
     // shadow clip-space position of this pixel.
     vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
     vec3 shadow = computeShadowSoft(shadowClipPos, i.normal, pixelCoords);
+    // vec3 shadow = vec3(1.0);
 
     vec3 ambientLight, skyLight;
     ltOverworld_skyColors(ambientLight, skyLight);

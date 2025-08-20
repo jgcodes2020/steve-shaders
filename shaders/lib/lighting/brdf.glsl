@@ -33,27 +33,14 @@ float brdfGeometry(float nDotL, float nDotV, float spAlpha) {
   return (numerL * numerV) / (denomL * denomV);
 }
 
-// GGX-Schlick geometry function (IBL constant)
-float brdfGeometryIBL(float nDotL, float nDotV, float spAlpha) {
-  float k = pow2(spAlpha) * 0.5;
-
-  float numerL = nDotL;
-  float denomL = fma(nDotL, -k, nDotL) + k;
-
-  float numerV = nDotV;
-  float denomV = fma(nDotV, -k, nDotV) + k;
-
-  return (numerL * numerV) / (denomL * denomV);
-}
-
 // Schlick's approximation (scalar F0)
 float brdfFresnel(float vDotH, float spF0) {
-  return spF0 + (1.0 - spF0) * pow5(1.0 - vDotH);
+  return spF0 + (1.0 - spF0) * pow(1.0 - vDotH, 5.0);
 }
 
 // Schlick's approximation (coloured F0)
 vec3 brdfFresnelMetal(float vDotH, vec3 color) {
-  return color + (1.0 - color) * pow5(1.0 - vDotH);
+  return color + (1.0 - color) * pow(1.0 - vDotH, 5.0);
 }
 
 // Cook-Torrance BRDF for opaque surfaces. Note that this already includes
@@ -109,20 +96,9 @@ vec4 brdfTranslucent(
   float f = (nDotV > 0.0) ? brdfFresnel(vDotH, spF0) : 0.0;
 
   vec4 diffuse  = vec4(color.rgb * nDotL / M_PI, color.a);
-  vec4 specular = vec4((d * g) / max(4.0 * nDotV, brdfMinNDotV));
+  vec4 specular = vec4(vec3((d * g) / max(4.0 * nDotV, brdfMinNDotV)), 1.0);
 
   return mix(diffuse, specular, f);
-}
-
-
-// Schlick's approximation with roughness correction (scalar F0)
-float brdfFresnelAmbient(float nDotV, float spAlpha, float spF0) {
-  return spF0 + (max(1.0 - spAlpha, spF0) - spF0) * pow5(1.0 - nDotV);
-}
-
-// Schlick's approximation with roughness correction (coloured F0)
-vec3 brdfFresnelMetalAmbient(float nDotV, vec3 color, float spAlpha) {
-  return color + (max(vec3(1.0 - spAlpha), color) - color) * pow5(1.0 - nDotV);
 }
 
 // Total Reflectance Function for ambient light. This is mostly chosen
@@ -132,7 +108,7 @@ vec3 trfAmbient(
   if (spF0 > brdfMetalThresh) {
     // This is purely stylized and designed to look good.
     vec3 colorTerm = color * sqrt(color);
-    return colorTerm * 0.5;
+    return colorTerm * 0.25;
   }
   else {
     // This assumes pure diffuse reflectance.
