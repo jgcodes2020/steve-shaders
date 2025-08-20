@@ -86,6 +86,10 @@ const int shadowMapResolution      = 2048;
 const float shadowDistance         = 160.0;
 const bool shadowHardwareFiltering = true;
 
+// const bool shadowtex0Nearest = true;
+// const bool shadowtex1Nearest = true;
+// const bool shadowcolor0Nearest = true;
+
 uniform sampler2DShadow shadowtex0;  // shadow distance
 uniform sampler2DShadow shadowtex1;  // shadow distance (opaque)
 
@@ -93,7 +97,6 @@ uniform sampler2DShadow shadowtex1;  // shadow distance (opaque)
 // ==================================
 
 const int noiseTextureResolution = 256;
-
 uniform sampler2D noisetex;  // noise
 
 // DEPTH BUFFERS

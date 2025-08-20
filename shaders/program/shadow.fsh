@@ -17,6 +17,7 @@ v;
 // naming scheme: bThing = buffer for thing
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 bColor;
+layout(depth_unchanged) out float gl_FragDepth;
 
 void main() {
   // This implements purely opaque shadowing with support for one transparent occluder.

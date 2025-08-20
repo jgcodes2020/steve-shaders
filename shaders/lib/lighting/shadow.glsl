@@ -2,6 +2,7 @@
 #define LIGHTING_SHADOW_GLSL_INCLUDED
 
 #include "/lib/common.glsl"
+#include "/lib/math/noise.glsl"
 
 // the constant "a" in the distortion function.
 const float shadowDistortA = 0.1;
@@ -22,7 +23,7 @@ vec3 shadowDistort(vec3 clipPos) {
   clipPos.xy  = fma(hpos, vec2(shadowDistortA), hpos) / denom;
 
   // Reduce range in Z. This apparently helps when the sun is lower in the sky.
-  clipPos.z *= 0.5;
+  // clipPos.z *= 0.5;
 
   return clipPos;
 }
@@ -50,7 +51,7 @@ vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
 vec3 testShadow(vec3 shadowScreenPos) {
   float test   = texture(shadowtex1, shadowScreenPos);
   float tlTest = texture(shadowtex0, shadowScreenPos);
-  vec4 tlColor  = texture(shadowcolor0, shadowScreenPos.xy);
+  vec4 tlColor = texture(shadowcolor0, shadowScreenPos.xy);
 
   return max(vec3(tlTest), tlColor.rgb * (1.0 - tlColor.a) * test);
 }
@@ -60,9 +61,6 @@ vec3 computeShadowSoft(vec4 shadowClipPos, vec3 normal, ivec2 pixelCoord) {
   const int sampleCount = ST_SHADOW_SAMPLES * ST_SHADOW_SAMPLES * 4;
   const float offsetMul =
     ST_SHADOW_RADIUS / (float(ST_SHADOW_SAMPLES) * shadowMapResolution);
-
-  // float theta = sampleNoise(pixelCoord).r * MF_TWO_PI;
-  // mat2 rot    = rotationMatrix(theta) * offsetMul;
 
   vec3 accum = vec3(0.0);
   for (int x = -ST_SHADOW_SAMPLES; x < ST_SHADOW_SAMPLES; x++) {

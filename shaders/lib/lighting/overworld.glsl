@@ -4,7 +4,7 @@
 const vec3 blockLightColor = vec3(0.974, 0.974, 0.737);
 const vec3 ambientColor    = vec3(0.1);
 
-const vec3 dayLightColor   = vec3(2.0);
+const vec3 dayLightColor   = vec3(8.0);
 const vec3 dayAmbientColor = vec3(0.2);
 
 const vec3 nightLightColor   = vec3(0.06, 0.08, 0.2);
