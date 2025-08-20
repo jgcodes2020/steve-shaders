@@ -18,14 +18,30 @@ mat3 tbnMatrix(vec3 normalIn, vec4 tangentIn, mat3 normalMatrix, mat4 gbufferMod
   return mat3(tangent, bitangent, normal);
 }
 
+// OCTAHEDRAL NORMAL PACKING
+// ==================================
+
+vec2 unitVectorToOcta(vec3 n) {
+  n /= dot(abs(n), vec3(1.0));
+  n.xy = (n.z >= 0.0)? n.xy : (1.0 - abs(n.yx)) * signNonzero(n.xy);
+  return n.xy;
+}
+vec3 octaToUnitVector(vec2 e) {
+  vec3 n = vec3(e.xy, 1.0 - dot(abs(e.xy), vec2(1.0)));
+  float t = clamp(-n.z, 0.0, 1.0);
+  n.xy += mix(vec2(t), vec2(-t), greaterThanEqual(n.xy, vec2(0.0)));
+  return normalize(n);
+}
+
 // FRAGMENT INFO
 // ==================================
 
 struct FragInfo {
   vec3 normal;
+  vec3 faceNormal;
+
   bool emissive;
   bool hand;
-
   vec2 vnLight;
   float ao;
 
@@ -41,6 +57,8 @@ FragInfo fragInfoFromTextures(vec4 texSpecular, vec4 texNormal, vec2 vnLight, fl
   vec3 tbnNormal = vec3(tbnNormalXY, sqrt(1.0 - dot(tbnNormalXY, tbnNormalXY)));
   vec3 normal = tbnMatrix * tbnNormal;
 
+  vec3 faceNormal = tbnMatrix[2];
+
   const bool emissive = false;
 #ifdef HAND
   const bool hand = true;
@@ -55,12 +73,14 @@ FragInfo fragInfoFromTextures(vec4 texSpecular, vec4 texNormal, vec2 vnLight, fl
   float emission = texSpecular.a;
   emission = (emission == 1.0)? 0.0 : emission * (255.0 / 254.0);
 
-  return FragInfo(normal, emissive, hand, vnLight, ao, spSmoothness, spF0, emission);
+  return FragInfo(normal, faceNormal, emissive, hand, vnLight, ao, spSmoothness, spF0, emission);
 }
 
 // Packs a FragInfo into a uvec4.
 uvec4 packFragInfo(FragInfo i) {
-  uint r = packSnorm4x8(vec4(i.normal, 0.0));
+  vec2 normalOcta = unitVectorToOcta(i.normal);
+  vec2 faceNormalOcta = unitVectorToOcta(i.faceNormal);
+  uint r = packSnorm4x8(vec4(normalOcta, faceNormalOcta));
 
   uint g = packUnorm4x8(vec4(i.vnLight, i.ao, 0.0));
   g |= (i.emissive) ? (1u << 30) : 0;
@@ -73,20 +93,22 @@ uvec4 packFragInfo(FragInfo i) {
 
 // Unpacks a FragInfo from a uvec4.
 FragInfo unpackFragInfo(uvec4 v) {
-  vec3 normal = normalize(unpackSnorm4x8(v.r).xyz);
+  vec4 unpackR = unpackSnorm4x8(v.r);
+  vec3 normal = octaToUnitVector(unpackR.xy);
+  vec3 faceNormal = octaToUnitVector(unpackR.zw);
 
   vec4 unpackG  = unpackUnorm4x8(v.g & 0x00FFFFFFu);
   vec2 vnLight  = unpackG.rg;
   float ao      = unpackG.b;
-  bool emissive = (v.r & (1u << 30)) != 0u;
-  bool hand     = (v.r & (1u << 31)) != 0u;
+  bool emissive = (v.g & (1u << 30)) != 0u;
+  bool hand     = (v.g & (1u << 31)) != 0u;
 
   vec4 unpackB       = unpackUnorm4x8(v.b & 0x00FFFFFFu);
   float spSmoothness = unpackB.r;
   float spF0         = unpackB.g;
   float emission     = unpackB.b;
 
-  return FragInfo(normal, emissive, hand, vnLight, ao, spSmoothness, spF0, emission);
+  return FragInfo(normal, faceNormal, emissive, hand, vnLight, ao, spSmoothness, spF0, emission);
 }
 
 #endif

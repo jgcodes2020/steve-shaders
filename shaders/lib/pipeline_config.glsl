@@ -43,10 +43,11 @@ DECL_COLORTEX(rgba16f, 0)
 
 // Fragment information buffer.
 // R
+// 31:16 | u8x2 octa_face_normal; // the normal (without normal mapping).
+// 15:0  | u8x2 octa_normal;      // the normal (with normal mapping applied).
+// G
 //    31 | bool hand;     // first-person hand, requires shadow adjustment.
 //    30 | bool emissive; // purely emissive, no lighting required.
-// 23:0  | i8x3 normal;   // normal vector.
-// G
 // 24:16 | u8 ao;         // ambient occlusion
 // 15:0  | u8x2 vn_light; // vanilla block/sky lighting
 // B
@@ -56,7 +57,7 @@ DECL_COLORTEX(rgba16f, 0)
 // See PACK_PURE_EMISSIVE in buffers.glsl for the clear colour.
 /*
 const int colortex1Format = RGBA32UI;
-const vec4 colortex1ClearColor = vec4(1073741824.0, 0.0, 0.0, 0.0);
+const vec4 colortex1ClearColor = vec4(0.0, 1073741824.0, 0.0, 0.0);
 */
 DECL_COLORTEX_U(rgba32ui, 1)
 

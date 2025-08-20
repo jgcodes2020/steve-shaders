@@ -15,6 +15,9 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
   uvec4 fragInfoPacked = imageLoad(colorimg1, pixelCoords);
   FragInfo i = unpackFragInfo(fragInfoPacked);
 
+  // color = i.emissive ? vec3(1.0, 0.0, 0.0) : vec3(0.0, 0.0, 0.0);
+  // return;
+
   if (!i.emissive) {
     vec2 screenCoords = vec2(pixelCoords) / vec2(viewWidth, viewHeight);
     float depth = texture(depthtex0, screenCoords).r;
@@ -25,7 +28,7 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
       ndcPos.z /= MC_HAND_DEPTH;
     }
 
-    // derive other coordinates from NDC position
+    // compute view and shadow view positions.
     vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);
     vec3 feetPos = txAffine(gbufferModelViewInverse, viewPos);
     vec3 shadowViewPos = txAffine(shadowModelView, feetPos);
@@ -35,8 +38,7 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
 
     // shadow clip-space position of this pixel.
     vec4 shadowClipPos = shadowProjection * vec4(shadowViewPos, 1.0);
-    vec3 shadow = computeShadowSoft(shadowClipPos, i.normal, pixelCoords);
-    // vec3 shadow = vec3(1.0);
+    vec3 shadow = computeShadowSoft(shadowClipPos, i.faceNormal, pixelCoords);
 
     vec3 ambientLight, skyLight;
     ltOverworld_skyColors(ambientLight, skyLight);

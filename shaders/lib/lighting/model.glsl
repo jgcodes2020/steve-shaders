@@ -57,14 +57,17 @@ vec4 pbrLightingTranslucent(
 
   vec4 reflected = vec4(0.0);
   {
-    // sunlight reflection
+    //
     vec4 skyReflectance =
       brdfTranslucent(i.normal, sunDir, viewDir, color, spAlpha, spF0);
+
     reflected += vec4(skyReflectance.rgb * skyLight, skyReflectance.a);
+
+    vec3 ambientReflectance = trfAmbient(i.normal, viewDir, color.rgb, spAlpha, spF0);
     // ambient light
-    reflected.rgb += color.rgb * (M_PI / 2) * (ambientLight * i.ao * vnLight.g);
+    reflected.rgb += ambientLight * ambientReflectance;
     // block light
-    reflected.rgb += color.rgb * (blockLight * vnLight.r);
+    reflected.rgb += blockLight * ambientReflectance;
   }
 
   vec4 emitted = vec4(color.rgb, 1.0);

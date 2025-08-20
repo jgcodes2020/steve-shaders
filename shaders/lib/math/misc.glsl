@@ -63,12 +63,18 @@ float l4norm(vec4 x) {
   return sqrt(sqrt(dot(x2, x2)));
 }
 
-// Returns 1 with the sign bit copied from x.
-// float signFast(float x) {
-//   const uint FLOAT_ONE = 0x3f800000u;
-//   uint i = floatBitsToUint(x);
-//   i = bitfieldInsert(i, FLOAT_ONE, 0, 31);
-//   return uintBitsToFloat(i);
-// }
+// Like sign, but never returns 0.
+float signNonzero(float x) {
+  return (x >= 0.0)? 1.0 : -1.0;
+}
+vec2 signNonzero(vec2 x) {
+  return mix(vec2(-1.0), vec2(1.0), greaterThanEqual(x, vec2(0.0)));
+}
+vec3 signNonzero(vec3 x) {
+  return mix(vec3(-1.0), vec3(1.0), greaterThanEqual(x, vec3(0.0)));
+}
+vec4 signNonzero(vec4 x) {
+  return mix(vec4(-1.0), vec4(1.0), greaterThanEqual(x, vec4(0.0)));
+}
 
 #endif

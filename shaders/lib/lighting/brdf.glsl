@@ -93,7 +93,8 @@ vec4 brdfTranslucent(
 
   // Specular highlights only happen when we're within the normal hemisphere.
   // The diffuse term already accounts for the lack of lighting.
-  float f = (nDotV > 0.0) ? brdfFresnel(vDotH, spF0) : 0.0;
+  float f = (nDotL > 0.0) ? brdfFresnel(vDotH, spF0) : 0.0;
+  float specularFactor = (d * g) / max(4.0 * nDotV, brdfMinNDotV);
 
   vec4 diffuse  = vec4(color.rgb * nDotL / M_PI, color.a);
   vec4 specular = vec4(vec3((d * g) / max(4.0 * nDotV, brdfMinNDotV)), 1.0);
@@ -108,7 +109,7 @@ vec3 trfAmbient(
   if (spF0 > brdfMetalThresh) {
     // This is purely stylized and designed to look good.
     vec3 colorTerm = color * sqrt(color);
-    return colorTerm * 0.25;
+    return colorTerm * 0.5;
   }
   else {
     // This assumes pure diffuse reflectance.
