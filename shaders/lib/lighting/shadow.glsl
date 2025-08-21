@@ -10,13 +10,13 @@ const float shadowDistortA = 0.1;
 // Distorts a position in clip space to capture more detail near the center
 vec3 shadowDistort(vec3 clipPos) {
   // XY distortion function:
-  //  (a + 1) * R
-  // -------------
-  // a + l4norm(R)
+  // (a + 1) * R
+  // -----------
+  // a + norm(R)
   // The extra (a + 1) factor on top improves usage of clip space by
   // stretching the furthest points to r = 1.
-  // The use of the 4-norm also does, since the squircle shape makes
-  // better use of the shadow map.
+  // Any p-norm will work for this, but I chose the 4-norm since it uses
+  // the shadow map much better than the 2-norm without being too expensive.
 
   vec2 hpos   = clipPos.xy;
   float denom = l4norm(hpos) + shadowDistortA;
@@ -36,7 +36,7 @@ vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
   // Multiply by the inverse of the distortion factor. This is an idea inspired
   // by Complementary, but adapted to my own shader.
   shadowNormal =
-    shadowNormal * (shadowDistortA + l4norm(clipPos.xy)) / (shadowDistortA + 1);
+    shadowNormal * (shadowDistortA + l4norm(clipPos.xy)) / (shadowDistortA + 1.0);
   return shadowNormal;
 }
 
@@ -72,7 +72,7 @@ vec3 computeShadowSoft(vec4 shadowClipPos, vec3 normal, ivec2 pixelCoord) {
       offsetShadowClipPos.xyz += shadowBias(offsetShadowClipPos.xyz, normal);
       offsetShadowClipPos.xyz = shadowDistort(offsetShadowClipPos.xyz);
       // convert to screen space
-      vec3 shadowNdcPos    = offsetShadowClipPos.xyz;
+      vec3 shadowNdcPos    = offsetShadowClipPos.xyz / offsetShadowClipPos.w;
       vec3 shadowScreenPos = fma(shadowNdcPos, vec3(0.5), vec3(0.5));
       // add the shadow test from this pixel
       accum += testShadow(shadowScreenPos);

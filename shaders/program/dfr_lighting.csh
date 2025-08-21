@@ -27,7 +27,7 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
     }
 
     // compute view and shadow view positions.
-    vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);
+    vec3 viewPos = txInvProj(gbufferProjectionInverse, ndcPos);
     vec3 feetPos = txAffine(gbufferModelViewInverse, viewPos);
     vec3 shadowViewPos = txAffine(shadowModelView, feetPos);
 

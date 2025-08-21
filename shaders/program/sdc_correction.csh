@@ -11,7 +11,7 @@ void main() {
 
   vec4 color = imageLoad(shadowcolorimg0, pixelCoords);
 
-  // correct gamma
+  // correct gamma, but don't premultiply alpha
   color.rgb = pow(color.rgb, vec3(SRGB_GAMMA));
 
   imageStore(shadowcolorimg0, pixelCoords, color);

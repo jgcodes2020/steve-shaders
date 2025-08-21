@@ -30,9 +30,9 @@ void main() {
   if (bColor.a < alphaTestRef)
     discard;
 #endif
-  // correct gamma; then premultiply alpha
-  bColor.rgb = pow(bColor.rgb, vec3(SRGB_GAMMA));
+  // correct to linear premultiplied color
   bColor.rgb *= bColor.a;
+  bColor.rgb = pow(bColor.rgb, vec3(SRGB_GAMMA));
 
   vec4 texSpecular = texture(specular, v.uvTex);
   vec4 texNormal = texture(normals, v.uvTex);
@@ -50,7 +50,7 @@ void main() {
     }
 
     // derive other coordinates from NDC position
-    vec3 viewPos = txProjective(gbufferProjectionInverse, ndcPos);
+    vec3 viewPos = txInvProj(gbufferProjectionInverse, ndcPos);
     vec3 feetPos = txAffine(gbufferModelViewInverse, viewPos);
     vec3 shadowViewPos = txAffine(shadowModelView, feetPos);
 

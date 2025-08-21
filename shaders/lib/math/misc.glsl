@@ -77,4 +77,19 @@ vec4 signNonzero(vec4 x) {
   return mix(vec4(-1.0), vec4(1.0), greaterThanEqual(x, vec4(0.0)));
 }
 
+// This *SHOULD* be built into GLSL and yet when I don't have it
+// Iris complains to me. Don't ask me why.
+float fma(float  p, float q, float r) {
+  return p * q + r;
+}
+vec2 fma(vec2 p, vec2 q, vec2 r) {
+  return p * q + r;
+}
+vec3 fma(vec3 p, vec3 q, vec3 r) {
+  return p * q + r;
+}
+vec4 fma(vec4 p, vec4 q, vec4 r) {
+  return p * q + r;
+}
+
 #endif
