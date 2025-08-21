@@ -15,18 +15,15 @@ in VertexData {
 v;
 
 // naming scheme: bThing = buffer for thing
-/* RENDERTARGETS: 0 */
-layout(location = 0) out vec4 bColor;
 layout(depth_unchanged) out float gl_FragDepth;
 
 void main() {
-  // This implements purely opaque shadowing with support for one transparent occluder.
-  // Transparent shadows are handled by considering the frontmost surface.
-  bColor = texture(gtexture, v.uvTex) * v.color;
-  if (bColor.a < alphaTestRef) {
+  // opaque surfaces don't need to do anything except
+  // update the fragment depth
+  vec4 color = texture(gtexture, v.uvTex) * v.color;
+#ifdef ALPHA_TEST
+  if (color.a < alphaTestRef) {
     discard;
   }
-  if (bp_isTintedGlass(v.entityID)) {
-    bColor.a = 1.0;
-  }
+#endif
 }

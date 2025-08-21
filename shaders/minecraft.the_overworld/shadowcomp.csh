@@ -1,1 +1,1 @@
-#include "/program/shc_correction.csh"
+#include "/program/sdc_correction.csh"
