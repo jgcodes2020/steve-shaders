@@ -2,6 +2,7 @@
 
 #include "/lib/common.glsl"
 #include "/lib/buffers.glsl"
+#include "/lib/sky/overworld.glsl"
 
 uniform sampler2D gtexture;
 
@@ -21,10 +22,21 @@ float fogify(float x, float w) {
 
 vec3 sky(vec3 viewDir) {
 	float vDotUp = dot(viewDir, gbufferModelView[1].xyz); // Not much, what's up with you?
-	return mix(skyColor, fogColor, fogify(max(vDotUp, 0.0), 0.1));
+	return mix(skyColor, fogColor, fogify(max(vDotUp, 0.0), 0.05));
 }
 
+vec3[7] rainbow = vec3[](
+  vec3(1.0, 0.0, 0.0),
+  vec3(1.0, 0.5, 0.0),
+  vec3(1.0, 1.0, 0.0),
+  vec3(0.0, 1.0, 0.0),
+  vec3(0.0, 1.0, 0.5),
+  vec3(0.0, 0.25, 1.0),
+  vec3(0.5, 0.0, 1.0)
+);
+
 void main() {
+
   if (v.color.a < 1.0 && renderStage == MC_RENDER_STAGE_SKY) {
     bColor = v.color;
     return;
@@ -32,12 +44,11 @@ void main() {
 
   vec2 ndcPos = fma(gl_FragCoord.xy, 2.0 / vec2(viewWidth, viewHeight), vec2(-1.0));
 
-	vec3 viewPos = vec3(
-		vec2(gbufferProjectionInverse[0].x, gbufferProjectionInverse[1].y) * ndcPos,
-		gbufferProjectionInverse[3].z
-	) / (gbufferProjectionInverse[2].w + gbufferProjectionInverse[3].w);
+	vec3 viewPos = txInvProj(gbufferProjectionInverse, vec3(ndcPos, 1.0));
+  vec3 viewDir = normalize(viewPos);
 
-	bColor = vec4(sky(normalize(viewPos)), 1.0);
+	// bColor = vec4(sky(normalize(viewPos)), 1.0);
+	bColor = vec4(computeSkybox(viewDir), 1.0);
 
   if (renderStage == MC_RENDER_STAGE_STARS) {
     bColor.rgb += v.color.rgb;
