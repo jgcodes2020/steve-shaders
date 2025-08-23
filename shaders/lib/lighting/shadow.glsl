@@ -2,7 +2,11 @@
 #define LIGHTING_SHADOW_GLSL_INCLUDED
 
 #include "/lib/common.glsl"
+#include "/lib/buffers.glsl"
 #include "/lib/math/noise.glsl"
+
+// SHADOW DISTORTION
+// ===============================================
 
 // the constant "a" in the distortion function.
 const float shadowDistortA = 0.1;
@@ -46,11 +50,18 @@ vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
 // in Iris's current pipeline. Ideally we'd be using other techniques but
 // this is as good as it gets with one shadow pass.
 
+float testTranslucent(vec3 shadowScreenPos) {
+  uvec4 data = textureGather(tex_tlShadow, shadowScreenPos.xy);
+  uint encodeDepth = encodeShadowDepth(shadowScreenPos.z);
+  vec4 values = mix(vec4(0.0), vec4(1.0), lessThanEqual(data, uvec4(encodeDepth)));
+  return dot(values, vec4(0.25));
+}
+
 // The shadow test for opaque surfaces.
 // Takes into account the transparency of the surface.
 vec3 testShadow(vec3 shadowScreenPos) {
   float test   = texture(shadowtex1, shadowScreenPos);
-  float tlTest = texture(shadowtex0, shadowScreenPos);
+  float tlTest = testTranslucent(shadowScreenPos);
   vec4 tlColor = texture(shadowcolor0, shadowScreenPos.xy);
 
   return max(vec3(tlTest), tlColor.rgb * (1.0 - tlColor.a) * test);

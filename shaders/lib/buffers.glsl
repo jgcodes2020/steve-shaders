@@ -18,6 +18,21 @@ mat3 tbnMatrix(vec3 normalIn, vec4 tangentIn, mat3 normalMatrix, mat4 gbufferMod
   return mat3(tangent, bitangent, normal);
 }
 
+// TRANSLUCENT SHADOW DEPTH BUFFER
+// ===============================================
+// Since we can't simply disable the depth test, we have to
+// emulate our own depth buffer using image atomics.
+
+uint encodeShadowDepth(float x) {
+  x = -x * 0.5 + 0.5;
+  return uint(x * INT_MAX_F);
+}
+
+float decodeShadowDepth(uint u) {
+  float x = float(u) / INT_MAX_F;
+  return 1.0 - 2.0 * x;
+}
+
 // OCTAHEDRAL NORMAL PACKING
 // ==================================
 

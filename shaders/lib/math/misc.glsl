@@ -12,6 +12,9 @@ const float M_PI = 3.1415926;
 // Coefficients for measuring luma/luminance.
 const vec3 LUMA_COEFFS = vec3(0.2126, 0.7152, 0.0722);
 
+// The largest integer. Probably not represented exactly.
+const float INT_MAX_F = 4294967295.0;
+
 // positive-clamped dot product.
 float clampDot(vec3 x, vec3 y) {
   return max(dot(x, y), 0.0);

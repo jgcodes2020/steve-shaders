@@ -21,8 +21,10 @@
 
 #ifdef LOOKUP_COMPUTE_SHADER
 #define DECL_LOOKUPTEX(format, name) layout(format) uniform image2D img_##name;
+#define DECL_LOOKUPTEX_U(format, name) layout(format) uniform uimage2D img_##name;
 #else
 #define DECL_LOOKUPTEX(format, name) uniform sampler2D tex_##name;
+#define DECL_LOOKUPTEX_U(format, name) uniform usampler2D tex_##name;
 #endif
 
 // Composite colour buffer.
@@ -73,7 +75,12 @@ DECL_SHADOWCOLOR(rgba16f, 0)
 // CUSTOM BUFFERS
 // ==================================
 
-DECL_LOOKUPTEX(rg16f, brdfLut)
+// DECL_LOOKUPTEX_U(r32ui, tlShadow)
+#ifdef LOOKUP_COMPUTE_SHADER
+layout(r32ui) uniform uimage2D img_tlShadow;
+#else
+uniform usampler2D tex_tlShadow;
+#endif
 
 
 #undef DECL_COLORTEX

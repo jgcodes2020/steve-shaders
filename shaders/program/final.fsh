@@ -15,10 +15,10 @@ vec3 reinhardJodie(vec3 v) {
 
 void main() {
 	color = vec4(texture(colortex0, texcoord).rgb, 1.0);
-  float depth = texture(depthtex0, texcoord).r;
+  // float depth = texture(depthtex0, texcoord).r;
 
-  if (true) {
-    color.rgb = reinhardJodie(color.rgb);
-  }
-  color.rgb = pow(color.rgb, vec3(SRGB_GAMMA_RCP));
+  // if (true) {
+  //   color.rgb = reinhardJodie(color.rgb);
+  // }
+  // color.rgb = pow(color.rgb, vec3(SRGB_GAMMA_RCP));
 }
