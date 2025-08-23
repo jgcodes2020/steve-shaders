@@ -64,7 +64,7 @@ vec3 testShadow(vec3 shadowScreenPos) {
   float tlTest = testTranslucent(shadowScreenPos);
   vec4 tlColor = texture(shadowcolor0, shadowScreenPos.xy);
 
-  return max(vec3(tlTest), tlColor.rgb * (1.0 - tlColor.a) * test);
+  return max(vec3(tlTest), tlColor.rgb * test);
 }
 
 // Function to perform PCF over an opaque surface.

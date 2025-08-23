@@ -19,20 +19,21 @@ v;
 // naming scheme: bThing = buffer for thing
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 bColor;
-layout(depth_unchanged) out float gl_FragDepth;
+// layout(depth_unchanged) out float gl_FragDepth;
 
 void main() {
-  bColor = texture(gtexture, v.uvTex) * v.color;
-// #ifdef ENTITY_COLOR
-//   bColor = mix(bColor, entityColor.rgb, entityColor.a);
-// #endif
+  vec4 color = texture(gtexture, v.uvTex) * v.color;
+  gl_FragDepth = -1.0;
   
-  if (bColor.a < alphaTestRef) {
+  if (color.a < alphaTestRef) {
     discard;
   }
   if (bp_isTintedGlass(v.entityID)) {
-    bColor.a = 1.0;
+    color.a = 1.0;
   }
+  color = pow(color, vec4(SRGB_GAMMA));
+  vec3 tx = color.rgb * (1.0 - color.a);
+  bColor = vec4(tx, 1.0);
 
   // custom depth buffer
   uint uDepth = encodeShadowDepth(gl_FragCoord.z);

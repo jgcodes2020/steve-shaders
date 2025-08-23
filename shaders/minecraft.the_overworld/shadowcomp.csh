@@ -1,1 +1,0 @@
-#include "/program/sdc_correction.csh"

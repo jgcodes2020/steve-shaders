@@ -69,6 +69,7 @@ DECL_COLORTEX_U(rgba32ui, 1)
 
 /*
 const int shadowcolor0Format = RGBA16F;
+const vec4 shadowcolor0ClearColor = vec4(1.0, 1.0, 1.0, 1.0);
 */
 DECL_SHADOWCOLOR(rgba16f, 0)
 

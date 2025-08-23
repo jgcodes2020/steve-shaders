@@ -11,14 +11,8 @@ const vec2 workGroupsRender = vec2(1.0, 1.0);
 void evalPixel(ivec2 pixelCoords, inout vec3 color) {
   vec2 screenCoords = vec2(pixelCoords) / vec2(viewWidth, viewHeight);
 
-  #if 1
-  float value = decodeShadowDepth(texture(tex_tlShadow, screenCoords).r);
-  // float value = decodeShadowDepth(1073741824u);
-  color = vec3(value);
-  #else
   vec3 value = texture(shadowcolor0, screenCoords).rgb;
   color = value;
-  #endif
 }
 
 void main() {
