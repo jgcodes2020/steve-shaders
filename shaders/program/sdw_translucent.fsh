@@ -31,7 +31,8 @@ void main() {
   if (bp_isTintedGlass(v.entityID)) {
     color.a = 1.0;
   }
-  color = pow(color, vec4(SRGB_GAMMA));
+  // I don't know if this is physically correct but it looks nice
+  color.rgb = pow(color.rgb, vec3(SRGB_GAMMA_RCP));
   vec3 tx = color.rgb * (1.0 - color.a);
   bColor = vec4(tx, 1.0);
 

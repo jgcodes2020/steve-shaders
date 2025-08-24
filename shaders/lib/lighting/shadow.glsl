@@ -51,20 +51,27 @@ vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
 // this is as good as it gets with one shadow pass.
 
 float testTranslucent(vec3 shadowScreenPos) {
+  vec2 fracXY = fract(shadowScreenPos.xy * float(shadowMapResolution) - 0.5);
+  vec4 wcomp = vec4(fracXY, vec2(1.0) - fracXY);
+  vec4 weights = wcomp.zxxz * wcomp.yyww;
+
   uvec4 data = textureGather(tex_tlShadow, shadowScreenPos.xy);
   uint encodeDepth = encodeShadowDepth(shadowScreenPos.z);
   vec4 values = mix(vec4(0.0), vec4(1.0), lessThanEqual(data, uvec4(encodeDepth)));
-  return dot(values, vec4(0.25));
+  return dot(values, weights);
 }
 
 // The shadow test for opaque surfaces.
 // Takes into account the transparency of the surface.
 vec3 testShadow(vec3 shadowScreenPos) {
   float test   = texture(shadowtex1, shadowScreenPos);
-  float tlTest = testTranslucent(shadowScreenPos);
-  vec4 tlColor = texture(shadowcolor0, shadowScreenPos.xy);
+  float tlTest = min(test, testTranslucent(shadowScreenPos));
+  vec3 tlColor = texture(shadowcolor0, shadowScreenPos.xy).rgb;
 
-  return max(vec3(tlTest), tlColor.rgb * test);
+  vec3 tlShadow = mix(tlColor, vec3(1.0), tlTest);
+  vec3 opShadow = vec3(test);
+
+  return min(opShadow, tlShadow);
 }
 
 // Function to perform PCF over an opaque surface.
