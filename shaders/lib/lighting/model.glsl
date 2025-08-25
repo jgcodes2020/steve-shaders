@@ -28,7 +28,7 @@ vec3 pbrLightingOpaque(
   vec3 reflected = vec3(0.0);
   {
     // sunlight reflection
-    reflected +=
+    reflected =
       skyLight * brdfOpaque(i.normal, sunDir, viewDir, color, spAlpha, spF0);
 
     vec3 ambientReflectance = trfAmbient(i.normal, viewDir, color, spAlpha, spF0);
@@ -54,14 +54,15 @@ vec4 pbrLightingTranslucent(
 
   // account for skylight being blocked
   skyLight *= shadow;
+  ambientLight *= i.ao * vnLight.g;
+  blockLight *= vnLight.r;
 
   vec4 reflected = vec4(0.0);
   {
-    //
+    // sunlight reflection
     vec4 skyReflectance =
       brdfTranslucent(i.normal, sunDir, viewDir, color, spAlpha, spF0);
-
-    reflected += vec4(skyReflectance.rgb * skyLight, skyReflectance.a);
+    reflected = vec4(skyReflectance.rgb * skyLight, skyReflectance.a);
 
     vec3 ambientReflectance = trfAmbient(i.normal, viewDir, color.rgb, spAlpha, spF0);
     // ambient light
