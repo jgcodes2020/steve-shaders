@@ -65,7 +65,7 @@ struct FragInfo {
   float emission;
 };
 
-const uvec4 PACK_PURE_EMISSIVE = uvec4(0x40000000u, 0u, 0u, 0u);
+const uvec4 PACK_PURE_EMISSIVE = uvec4(0u, 0x40000000u, 0u, 0u);
 
 FragInfo fragInfoFromTextures(vec4 texSpecular, vec4 texNormal, vec2 vnLight, float ao, mat3 tbnMatrix) {
   vec2 tbnNormalXY = fma(texNormal.xy, vec2(2.0), vec2(-1.0));
