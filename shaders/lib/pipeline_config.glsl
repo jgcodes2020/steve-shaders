@@ -104,6 +104,9 @@ uniform sampler2DShadow shadowtex1;  // shadow distance (opaque)
 // NOISE TEXTURE
 // ==================================
 
+// This is set to a blue-noise texture for
+// dithering purposes. Actual RNG is done using
+// a PCG hash.
 const int noiseTextureResolution = 256;
 uniform sampler2D noisetex;  // noise
 

@@ -51,36 +51,19 @@ vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
 // this is as good as it gets with one shadow pass.
 
 float testTranslucent(vec3 shadowScreenPos) {
-  vec2 fracXY  = fract(shadowScreenPos.xy * float(shadowMapResolution) - 0.5);
-  vec4 wcomp   = vec4(fracXY, vec2(1.0) - fracXY);
-  vec4 weights = wcomp.zxxz * wcomp.yyww;
-
-  uvec4 data       = textureGather(tex_tlShadow, shadowScreenPos.xy);
+  uint data        = texture(tex_tlShadow, shadowScreenPos.xy).r;
   uint encodeDepth = encodeShadowDepth(shadowScreenPos.z);
-  vec4 values =
-    mix(vec4(0.0), vec4(1.0), lessThanEqual(data, uvec4(encodeDepth)));
-  return dot(values, weights);
+  return (data <= encodeDepth) ? 1.0 : 0.0;
 }
 
-// The shadow test for opaque surfaces.
-// Takes into account the transparency of the surface.
 vec3 testShadow(vec3 shadowScreenPos) {
+  uint tlData     = texture(tex_tlShadow, shadowScreenPos.xy).r;
+  uint encodeDepth = encodeShadowDepth(shadowScreenPos.z);
+
   float test   = texture(shadowtex1, shadowScreenPos);
-  float tlTest = min(test, testTranslucent(shadowScreenPos));
   vec3 tlColor = texture(shadowcolor0, shadowScreenPos.xy).rgb;
 
-  vec3 tlShadow = mix(tlColor, vec3(1.0), tlTest);
-  vec3 opShadow = vec3(test);
-
-  return min(opShadow, tlShadow);
-}
-
-vec3 testHardShadow(vec3 shadowScreenPos) {
-  float test   = texture(shadowtex1, shadowScreenPos);
-  float tlDepth = texture(tex_tlShadow, shadowScreenPos.xy).r;
-  vec3 tlColor = texture(shadowcolor0, shadowScreenPos.xy).rgb;
-
-  vec3 tlShadow = (tlDepth <= shadowScreenPos.z)? vec3(1.0) : tlColor;
+  vec3 tlShadow = (tlData <= encodeDepth)? vec3(1.0) : tlColor;
   vec3 opShadow = vec3(test);
 
   return min(opShadow, tlShadow);
@@ -135,7 +118,7 @@ vec3 computeShadowSoft(vec4 shadowClipPos, vec3 normal, ivec2 pixelCoord) {
       vec3 shadowNdcPos    = offsetShadowClipPos.xyz / offsetShadowClipPos.w;
       vec3 shadowScreenPos = fma(shadowNdcPos, vec3(0.5), vec3(0.5));
       // add the shadow test from this pixel
-      accum += testHardShadow(shadowScreenPos);
+      accum += testShadow(shadowScreenPos);
     }
   }
 
