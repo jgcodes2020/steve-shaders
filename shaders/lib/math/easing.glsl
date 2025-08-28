@@ -3,6 +3,8 @@
 
 #include "/lib/math/misc.glsl"
 
+//! Functions for easing between edges.
+
 // Basic linear easing between two edges.
 float linearStep(float edge0, float edge1, float x) {
   return clamp((x - edge0) / (edge1 - edge0), 0.0, 1.0);

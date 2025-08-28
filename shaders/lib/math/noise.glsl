@@ -3,12 +3,15 @@
 
 #include "/lib/pipeline_config.glsl"
 
+//! Useful functions for generating noise.
+
 // Samples the noise texture, seeded by pixel coordinates.
-vec4 sampleNoise(ivec2 pixelCoords) {
-  // The noise texture has a power-of-two size, so any odd number is to it.
-  // This helps break up any regularity that might be visible.
+vec4 sampleNoise(ivec2 seed) {
+  // The noise texture has a power-of-two size, so any odd number is coprime to the size.
+  // This keeps the noise from being "fixed" to the screen.
   int frameJitter = frameCounter * 2 + 1;
-  ivec2 sampleCoords = (pixelCoords * frameJitter) % noiseTextureResolution;
+  // Jitter and wrap the coordinates.
+  ivec2 sampleCoords = (seed * frameJitter) % noiseTextureResolution;
   return texelFetch(noisetex, sampleCoords, 0);
 }
 

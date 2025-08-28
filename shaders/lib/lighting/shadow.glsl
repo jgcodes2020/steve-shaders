@@ -1,8 +1,8 @@
 #ifndef LIGHTING_SHADOW_GLSL_INCLUDED
 #define LIGHTING_SHADOW_GLSL_INCLUDED
 
-#include "/lib/common.glsl"
 #include "/lib/buffers.glsl"
+#include "/lib/common.glsl"
 #include "/lib/math/noise.glsl"
 
 // SHADOW DISTORTION
@@ -39,8 +39,8 @@ vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
     mat3(shadowProjection) * (mat3(shadowModelView) * worldNormal);
   // Multiply by the inverse of the distortion factor. This is an idea inspired
   // by Complementary, but adapted to my own shader.
-  shadowNormal =
-    shadowNormal * (shadowDistortA + l4norm(clipPos.xy)) / (shadowDistortA + 1.0);
+  shadowNormal = shadowNormal * (shadowDistortA + l4norm(clipPos.xy)) /
+    (shadowDistortA + 1.0);
   return shadowNormal;
 }
 
@@ -51,13 +51,14 @@ vec3 shadowBias(vec3 clipPos, vec3 worldNormal) {
 // this is as good as it gets with one shadow pass.
 
 float testTranslucent(vec3 shadowScreenPos) {
-  vec2 fracXY = fract(shadowScreenPos.xy * float(shadowMapResolution) - 0.5);
-  vec4 wcomp = vec4(fracXY, vec2(1.0) - fracXY);
+  vec2 fracXY  = fract(shadowScreenPos.xy * float(shadowMapResolution) - 0.5);
+  vec4 wcomp   = vec4(fracXY, vec2(1.0) - fracXY);
   vec4 weights = wcomp.zxxz * wcomp.yyww;
 
-  uvec4 data = textureGather(tex_tlShadow, shadowScreenPos.xy);
+  uvec4 data       = textureGather(tex_tlShadow, shadowScreenPos.xy);
   uint encodeDepth = encodeShadowDepth(shadowScreenPos.z);
-  vec4 values = mix(vec4(0.0), vec4(1.0), lessThanEqual(data, uvec4(encodeDepth)));
+  vec4 values =
+    mix(vec4(0.0), vec4(1.0), lessThanEqual(data, uvec4(encodeDepth)));
   return dot(values, weights);
 }
 
@@ -74,17 +75,58 @@ vec3 testShadow(vec3 shadowScreenPos) {
   return min(opShadow, tlShadow);
 }
 
+vec3 testHardShadow(vec3 shadowScreenPos) {
+  float test   = texture(shadowtex1, shadowScreenPos);
+  float tlDepth = texture(tex_tlShadow, shadowScreenPos.xy).r;
+  vec3 tlColor = texture(shadowcolor0, shadowScreenPos.xy).rgb;
+
+  vec3 tlShadow = (tlDepth <= shadowScreenPos.z)? vec3(1.0) : tlColor;
+  vec3 opShadow = vec3(test);
+
+  return min(opShadow, tlShadow);
+}
+
+// Function to perform PCF over an opaque surface.
+// vec3 computeShadowSoft(vec4 shadowClipPos, vec3 normal, ivec2 pixelCoord) {
+//   const int sampleCount = ST_SHADOW_SAMPLES * ST_SHADOW_SAMPLES * 4;
+//   const float offsetMul =
+//     ST_SHADOW_RADIUS / (float(ST_SHADOW_SAMPLES) * shadowMapResolution);
+
+//   vec3 accum = vec3(0.0);
+//   for (int x = -ST_SHADOW_SAMPLES; x < ST_SHADOW_SAMPLES; x++) {
+//     for (int y = -ST_SHADOW_SAMPLES; y < ST_SHADOW_SAMPLES; y++) {
+//       // compute offset, divide by shadow map resolution to put it in pixels
+//       vec2 offset = offsetMul * vec2(x, y);
+// // bias and distort the clip space position
+// vec4 offsetShadowClipPos = shadowClipPos + vec4(offset, 0.0, 0.0);
+// offsetShadowClipPos.xyz += shadowBias(offsetShadowClipPos.xyz, normal);
+// offsetShadowClipPos.xyz = shadowDistort(offsetShadowClipPos.xyz);
+// // convert to screen space
+// vec3 shadowNdcPos    = offsetShadowClipPos.xyz / offsetShadowClipPos.w;
+// vec3 shadowScreenPos = fma(shadowNdcPos, vec3(0.5), vec3(0.5));
+// // add the shadow test from this pixel
+// accum += testShadow(shadowScreenPos);
+//     }
+//   }
+
+//   return accum / float(sampleCount);
+// }
+
 // Function to perform PCF over an opaque surface.
 vec3 computeShadowSoft(vec4 shadowClipPos, vec3 normal, ivec2 pixelCoord) {
-  const int sampleCount = ST_SHADOW_SAMPLES * ST_SHADOW_SAMPLES * 4;
-  const float offsetMul =
-    ST_SHADOW_RADIUS / (float(ST_SHADOW_SAMPLES) * shadowMapResolution);
+  const int sampleCount = ST_SHADOW_SAMPLES * ST_SHADOW_SAMPLES;
+  const float offsetMul = ST_SHADOW_RADIUS / shadowMapResolution;
 
   vec3 accum = vec3(0.0);
-  for (int x = -ST_SHADOW_SAMPLES; x < ST_SHADOW_SAMPLES; x++) {
-    for (int y = -ST_SHADOW_SAMPLES; y < ST_SHADOW_SAMPLES; y++) {
-      // compute offset, divide by shadow map resolution to put it in pixels
-      vec2 offset = offsetMul * vec2(x, y);
+  for (int u = 0; u < ST_SHADOW_SAMPLES; u++) {
+    for (int v = 0; v < ST_SHADOW_SAMPLES; v++) {
+      // get position from [0, 1)
+      vec2 gridUV = (vec2(u, v) + sampleNoise(pixelCoord + ivec2(u, v)).xy) /
+        float(ST_SHADOW_SAMPLES);
+      // convert UV to sample in a circle
+      float r = sqrt(gridUV.x) * offsetMul;
+      vec2 offset =
+        vec2(cos(gridUV.y * 2.0 * M_PI), sin(gridUV.y * 2.0 * M_PI)) * r;
       // bias and distort the clip space position
       vec4 offsetShadowClipPos = shadowClipPos + vec4(offset, 0.0, 0.0);
       offsetShadowClipPos.xyz += shadowBias(offsetShadowClipPos.xyz, normal);
@@ -93,7 +135,7 @@ vec3 computeShadowSoft(vec4 shadowClipPos, vec3 normal, ivec2 pixelCoord) {
       vec3 shadowNdcPos    = offsetShadowClipPos.xyz / offsetShadowClipPos.w;
       vec3 shadowScreenPos = fma(shadowNdcPos, vec3(0.5), vec3(0.5));
       // add the shadow test from this pixel
-      accum += testShadow(shadowScreenPos);
+      accum += testHardShadow(shadowScreenPos);
     }
   }
 

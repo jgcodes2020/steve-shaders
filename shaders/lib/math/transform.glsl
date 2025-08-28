@@ -3,7 +3,7 @@
 
 #include "/lib/math/misc.glsl"
 
-// Useful math functions for dealing with matrices.
+//! Useful math functions for dealing with matrices.
 
 // Applies an affine transformation to a point.
 // An affine transformation has the form:
