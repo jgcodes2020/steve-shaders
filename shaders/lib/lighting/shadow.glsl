@@ -103,10 +103,12 @@ vec3 computeShadowSoft(vec4 shadowClipPos, vec3 normal, ivec2 pixelCoord) {
   vec3 accum = vec3(0.0);
   for (int u = 0; u < ST_SHADOW_SAMPLES; u++) {
     for (int v = 0; v < ST_SHADOW_SAMPLES; v++) {
-      // get position from [0, 1)
+      // get position from [0, 1).
+      // This is stratified sampling - we basically have one point
+      // per grid cell, and then it occupies a random position within that cell.
       vec2 gridUV = (vec2(u, v) + sampleNoise(pixelCoord + ivec2(u, v)).xy) /
         float(ST_SHADOW_SAMPLES);
-      // convert UV to sample in a circle
+      // convert [0, 1)^2 to points on the unit circle
       float r = sqrt(gridUV.x) * offsetMul;
       vec2 offset =
         vec2(cos(gridUV.y * 2.0 * M_PI), sin(gridUV.y * 2.0 * M_PI)) * r;
