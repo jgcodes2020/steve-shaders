@@ -1,8 +1,8 @@
 #ifndef SKY_OVERWORLD_GLSL_INCLUDED
   #define SKY_OVERWORLD_GLSL_INCLUDED
 
+  #include "/lib/common.glsl"
   #include "/lib/math/easing.glsl"
-  #include "/lib/math/misc.glsl"
 
 // Function computing the skybox semi-programmatically.
 vec3 computeSkybox(vec3 viewDir) {
@@ -13,16 +13,46 @@ vec3 computeSkybox(vec3 viewDir) {
   float sDotU = dot(sunDir, gbufferModelView[1].xyz);
   float vDotU = dot(viewDir, gbufferModelView[1].xyz);
 
+  float rainFactor = pow2(rainStrength);
+
   float midToUpFactor = smoothstep(midToUpLowEdge, midToUpHighEdge, vDotU);
 
-  vec3 dayUpColor  = skyColor * 1.5;
-  vec3 dayMidColor = mix(skyColor, vec3(1.0), 0.4) * 1.5;
+  // CLEAR CURVE
+  // ====================================================
 
-  vec3 horizUpColor  = skyColor;
-  vec3 horizMidColor = mix(skyColor, vec3(0.5), 0.2);
+  vec3 dayClearUpColor  = skyColor * 1.5;
+  vec3 dayClearMidColor = mix(skyColor, vec3(1.0), 0.2) * 1.5;
 
-  vec3 nightUpColor  = vec3(0.0);
-  vec3 nightMidColor = skyColor * 0.1;
+  vec3 horizClearUpColor  = skyColor;
+  vec3 horizClearMidColor = mix(skyColor, vec3(0.5), 0.2);
+
+  vec3 nightClearUpColor  = vec3(0.0);
+  vec3 nightClearMidColor = skyColor * 0.1;
+
+  // RAIN CURVE
+  // ====================================================
+
+  vec3 dayRainUpColor  = mix(skyColor, vec3(1.0), 0.2);
+  vec3 dayRainMidColor = skyColor * 1.2;
+
+  vec3 horizRainUpColor  = mix(skyColor, vec3(0.5), 0.2);
+  vec3 horizRainMidColor = skyColor * 1.1;
+
+  vec3 nightRainUpColor  = vec3(0.0);
+  vec3 nightRainMidColor = skyColor * 0.1;
+
+  // COMBINED CURVE
+  // ====================================================
+  
+  vec3 dayUpColor = mix(dayClearUpColor, dayRainUpColor, rainFactor);
+  vec3 dayMidColor = mix(dayClearMidColor, dayRainMidColor, rainFactor);
+
+  vec3 horizUpColor = mix(horizClearUpColor, horizRainUpColor, rainFactor);
+  vec3 horizMidColor = mix(horizClearMidColor, horizRainMidColor, rainFactor);
+
+  vec3 nightUpColor = mix(nightClearUpColor, nightRainUpColor, rainFactor);
+  vec3 nightMidColor = mix(nightClearMidColor, nightRainMidColor, rainFactor);
+
 
   // vec3 upColor = mix(nightUpColor, dayUpColor, sunFactor);
   // vec3 midColor = mix(nightMidColor, dayMidColor, sunFactor);

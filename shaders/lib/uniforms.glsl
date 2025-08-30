@@ -9,6 +9,7 @@ uniform mat4 shadowProjection;          // shadow -> shadow NDC
 
 uniform vec3 shadowLightPosition;  // sun/moon angle
 uniform vec3 sunPosition;          // sun angle
+uniform float rainStrength;        // 0 for clear, 1 when raining
 
 uniform float nightVision;  // multiplier for night vision effect
 uniform float blindness;    // multiplier for blindness effect
