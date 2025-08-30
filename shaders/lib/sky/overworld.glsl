@@ -4,18 +4,43 @@
   #include "/lib/common.glsl"
   #include "/lib/math/easing.glsl"
 
-// Function computing the skybox semi-programmatically.
+// Function computing the skybox given a direction in view-space.
 vec3 computeSkybox(vec3 viewDir) {
   const float midToUpLowEdge  = 8.7155742e-2;  // ~5 degrees over the horizon
   const float midToUpHighEdge = 1.7364818e-1;  // ~10 degrees over the horizon
 
+  const float twilightLowEdge = -1.7364818e-1;  // ~10 degrees under the horizon
+  const float twilightHighEdge = 3.4202014e-1;  // ~25 degrees over the horizon
+
+  const float twilightNearEdge = 8.7155742e-2;   // ~5 degrees from the equator
+  const float twilightFarEdge  = -8.7155742e-2;  // ~5 degrees from the equator
+
   vec3 sunDir = sunPosition * 0.01;
   float sDotU = dot(sunDir, gbufferModelView[1].xyz);
+  float sDotE = dot(sunDir, gbufferModelView[0].xyz);
   float vDotU = dot(viewDir, gbufferModelView[1].xyz);
 
-  float rainFactor = pow2(rainStrength);
-
+  float rainFactor    = pow2(rainStrength);
   float midToUpFactor = smoothstep(midToUpLowEdge, midToUpHighEdge, vDotU);
+
+  // TWILIGHT GRADIENT
+  // ====================================================
+
+  float twilightFactor  = linearStep(twilightLowEdge, twilightHighEdge, sDotU);
+  float twilightDirSign = signNonzero(sDotE);
+
+  float twilightTheta = easeTempQuadratic(twilightFactor) * radians(10);
+  vec3 twilightDir =
+    mat3(gbufferModelView) * vec3(sin(twilightTheta) * twilightDirSign, -cos(twilightTheta), 0.0);
+
+  float twilightVisFactor = easeTempQuadratic(twilightFactor);
+  float twilightAngleFactor = linearStep(twilightFarEdge, twilightNearEdge, dot(viewDir, twilightDir));
+  float twilightMixFactor = twilightVisFactor * twilightAngleFactor;
+
+  const vec3 twilightBeginColor = vec3(0.976, 0.494, 0.447);
+  const vec3 twilightEndColor   = vec3(0.976, 0.870, 0.447);
+  vec3 twilightColor =
+    mix(twilightBeginColor, twilightEndColor, twilightFactor);
 
   // CLEAR CURVE
   // ====================================================
@@ -43,41 +68,46 @@ vec3 computeSkybox(vec3 viewDir) {
 
   // COMBINED CURVE
   // ====================================================
-  
-  vec3 dayUpColor = mix(dayClearUpColor, dayRainUpColor, rainFactor);
+
+  vec3 dayUpColor  = mix(dayClearUpColor, dayRainUpColor, rainFactor);
   vec3 dayMidColor = mix(dayClearMidColor, dayRainMidColor, rainFactor);
 
-  vec3 horizUpColor = mix(horizClearUpColor, horizRainUpColor, rainFactor);
+  vec3 horizUpColor  = mix(horizClearUpColor, horizRainUpColor, rainFactor);
   vec3 horizMidColor = mix(horizClearMidColor, horizRainMidColor, rainFactor);
 
-  vec3 nightUpColor = mix(nightClearUpColor, nightRainUpColor, rainFactor);
+  vec3 nightUpColor  = mix(nightClearUpColor, nightRainUpColor, rainFactor);
   vec3 nightMidColor = mix(nightClearMidColor, nightRainMidColor, rainFactor);
-
 
   // vec3 upColor = mix(nightUpColor, dayUpColor, sunFactor);
   // vec3 midColor = mix(nightMidColor, dayMidColor, sunFactor);
 
   // 3-point interpolation
   vec3 upColor = mix(
-    mix(
-      nightUpColor, 
-      horizUpColor, 
-      linearStep(-1.0, 0.0, sDotU)
-    ), 
-    dayUpColor,
-    linearStep(0.0, 1.0, sDotU)
-  );
+    mix(nightUpColor, horizUpColor, linearStep(-1.0, 0.0, sDotU)), dayUpColor,
+    linearStep(0.0, 1.0, sDotU));
   vec3 midColor = mix(
-    mix(
-      nightMidColor, 
-      horizMidColor, 
-      linearStep(-1.0, 0.0, sDotU)
-    ), 
-    dayMidColor,
-    linearStep(0.0, 1.0, sDotU)
-  );
+    mix(nightMidColor, horizMidColor, linearStep(-1.0, 0.0, sDotU)),
+    dayMidColor, linearStep(0.0, 1.0, sDotU));
 
-  return mix(midColor, upColor, midToUpFactor);
+  vec3 baseSkyColor = mix(midColor, upColor, midToUpFactor);
+
+  return mix(baseSkyColor, twilightColor, twilightMixFactor);
 }
 
 #endif
+/*
+  const vec3 baseSkyColor = vec3(0.36, 0.57, 0.85);
+  //
+  const vec3 zenithDayColor = baseSkyColor * 1.75;
+  const vec3 zenithNightColor = zenithDayColor * 0.05;
+
+  const vec3 horizonDayColor = baseSkyColor * 2.0;
+  const vec3 horizonNightColor = baseSkyColor * 0.1;
+
+  const float twilightLow = -1.7364818e-1; // ~10 degrees under the horizon
+  const float twilightHigh = 4.2261826e-1; // ~25 degrees over the horizon
+
+  const float skyTransitionLow = 8.7155742e-2; // ~5 degrees over the horizon
+  const float skyTransitionHigh = 1.7364818e-1; // ~10 degrees over the horizon
+
+*/
