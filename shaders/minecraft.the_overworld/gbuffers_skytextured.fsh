@@ -1,3 +1,3 @@
 #define USE_VCOLOR
 #define USE_TEXTURE
-#include "/program/geo_emissive.fsh"
+#include "/program/geo_sun_moon.fsh"

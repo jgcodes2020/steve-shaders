@@ -12,8 +12,8 @@ vec3 computeSkybox(vec3 viewDir) {
   const float twilightLowEdge = -1.7364818e-1;  // ~10 degrees under the horizon
   const float twilightHighEdge = 3.4202014e-1;  // ~25 degrees over the horizon
 
-  const float twilightNearEdge = 8.7155742e-2;   // ~5 degrees from the equator
-  const float twilightFarEdge  = -8.7155742e-2;  // ~5 degrees from the equator
+  const float twilightNearEdge = 4.3619387e-2;   // ~2.5 degrees from the equator
+  const float twilightFarEdge  = -4.3619387e-2;  // ~2.5 degrees from the equator
 
   vec3 sunDir = sunPosition * 0.01;
   float sDotU = dot(sunDir, gbufferModelView[1].xyz);
@@ -95,19 +95,3 @@ vec3 computeSkybox(vec3 viewDir) {
 }
 
 #endif
-/*
-  const vec3 baseSkyColor = vec3(0.36, 0.57, 0.85);
-  //
-  const vec3 zenithDayColor = baseSkyColor * 1.75;
-  const vec3 zenithNightColor = zenithDayColor * 0.05;
-
-  const vec3 horizonDayColor = baseSkyColor * 2.0;
-  const vec3 horizonNightColor = baseSkyColor * 0.1;
-
-  const float twilightLow = -1.7364818e-1; // ~10 degrees under the horizon
-  const float twilightHigh = 4.2261826e-1; // ~25 degrees over the horizon
-
-  const float skyTransitionLow = 8.7155742e-2; // ~5 degrees over the horizon
-  const float skyTransitionHigh = 1.7364818e-1; // ~10 degrees over the horizon
-
-*/
