@@ -1,1 +1,0 @@
-#include "/program/com_fog.csh"

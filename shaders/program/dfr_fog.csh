@@ -19,7 +19,7 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
   vec2 screenCoords = vec2(pixelCoords) / vec2(viewWidth, viewHeight);
   float depth = texture(depthtex0, screenCoords).r;
 
-  if (depth == 1.0) {
+  if (depth == 1.0 && i.emissive) {
     return;
   }
 
@@ -33,10 +33,13 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
 	vec3 viewPos = txInvProj(gbufferProjectionInverse, ndcPos);
   vec3 viewDir = normalize(viewPos);
 
-	vec3 distFogColor = pow(computeSkybox(viewDir), vec3(SRGB_GAMMA));
-  float distFogFactor = linearStep(far * 0.8, far * 0.95, length(viewPos));
+	{
+    // distance fog
+    vec3 distFogColor = pow(computeSkybox(viewDir), vec3(SRGB_GAMMA));
+    float distFogFactor = linearStep(far * 0.9, far, length(viewPos));
+    color = mix(color, distFogColor, distFogFactor);
 
-  color = mix(color, distFogColor, distFogFactor);
+  }
 }
 
 void main() {

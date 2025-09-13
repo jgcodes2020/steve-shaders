@@ -30,4 +30,8 @@ uniform float far;       // a distance that's kinda far. yeah.
 uniform float viewWidth;   // viewport width
 uniform float viewHeight;  // viewport height
 
+// CUSTOM UNIFORMS
+// ============================
+uniform vec3 waterColor; // a rough guess for the biome's water colour
+
 #endif
