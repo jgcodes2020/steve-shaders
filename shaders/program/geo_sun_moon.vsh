@@ -3,8 +3,6 @@
 #include "/lib/buffers.glsl"
 #include "/lib/common.glsl"
 
-in vec4 at_tangent;
-
 out VertexData {
   vec4 color;
   vec2 uvTex;

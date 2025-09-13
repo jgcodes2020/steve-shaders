@@ -5,6 +5,9 @@
 
 //! Useful functions for generating noise.
 
+const float M_RCP_GOLDEN = 0.6180340;
+const float M_ROOT2_M1   = 0.4142136;
+
 // https://www.shadertoy.com/view/XlGcRh
 uint hashPCG(uint v) {
   uint state = v * 747796405u + 2891336453u;

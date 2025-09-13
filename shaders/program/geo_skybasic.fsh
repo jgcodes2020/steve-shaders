@@ -2,7 +2,7 @@
 
 #include "/lib/common.glsl"
 #include "/lib/buffers.glsl"
-#include "/lib/sky/overworld.glsl"
+#include "/lib/sky/current_dim.glsl"
 
 uniform sampler2D gtexture;
 
@@ -37,7 +37,7 @@ vec3[7] rainbow = vec3[](
 
 void main() {
 
-  if (v.color.a < 1.0 && renderStage == MC_RENDER_STAGE_SKY) {
+  if (renderStage == MC_RENDER_STAGE_STARS || v.color.a < 1.0) {
     bColor = v.color;
     return;
   }

@@ -46,7 +46,8 @@ void main() {
     // compute NDC; accounting for the hand being shifted during projection
     vec3 ndcPos = fma(vec3(screenCoords, depth), vec3(2.0), vec3(-1.0));
     if (i.hand) {
-      ndcPos.z /= MC_HAND_DEPTH;
+      const float invHandDepth = 1.0 / MC_HAND_DEPTH;
+      ndcPos.z *= invHandDepth;
     }
 
     // derive other coordinates from NDC position

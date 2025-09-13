@@ -70,32 +70,6 @@ vec3 testShadow(vec3 shadowScreenPos) {
 }
 
 // Function to perform PCF over an opaque surface.
-// vec3 computeShadowSoft(vec4 shadowClipPos, vec3 normal, ivec2 pixelCoord) {
-//   const int sampleCount = ST_SHADOW_SAMPLES * ST_SHADOW_SAMPLES * 4;
-//   const float offsetMul =
-//     ST_SHADOW_RADIUS / (float(ST_SHADOW_SAMPLES) * shadowMapResolution);
-
-//   vec3 accum = vec3(0.0);
-//   for (int x = -ST_SHADOW_SAMPLES; x < ST_SHADOW_SAMPLES; x++) {
-//     for (int y = -ST_SHADOW_SAMPLES; y < ST_SHADOW_SAMPLES; y++) {
-//       // compute offset, divide by shadow map resolution to put it in pixels
-//       vec2 offset = offsetMul * vec2(x, y);
-// // bias and distort the clip space position
-// vec4 offsetShadowClipPos = shadowClipPos + vec4(offset, 0.0, 0.0);
-// offsetShadowClipPos.xyz += shadowBias(offsetShadowClipPos.xyz, normal);
-// offsetShadowClipPos.xyz = shadowDistort(offsetShadowClipPos.xyz);
-// // convert to screen space
-// vec3 shadowNdcPos    = offsetShadowClipPos.xyz / offsetShadowClipPos.w;
-// vec3 shadowScreenPos = fma(shadowNdcPos, vec3(0.5), vec3(0.5));
-// // add the shadow test from this pixel
-// accum += testShadow(shadowScreenPos);
-//     }
-//   }
-
-//   return accum / float(sampleCount);
-// }
-
-// Function to perform PCF over an opaque surface.
 vec3 computeShadowSoft(vec4 shadowClipPos, vec3 normal, ivec2 pixelCoord) {
   const int sampleCount = ST_SHADOW_SAMPLES * ST_SHADOW_SAMPLES;
   const float offsetMul = ST_SHADOW_RADIUS / shadowMapResolution;
