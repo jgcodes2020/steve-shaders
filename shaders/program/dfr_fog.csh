@@ -29,7 +29,6 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
     const float invHandDepth = 1.0 / MC_HAND_DEPTH;
     ndcPos.z *= invHandDepth;
   }
-
 	vec3 viewPos = txInvProj(gbufferProjectionInverse, ndcPos);
   vec3 viewDir = normalize(viewPos);
 
@@ -38,7 +37,6 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
     vec3 distFogColor = pow(computeSkybox(viewDir), vec3(SRGB_GAMMA));
     float distFogFactor = linearStep(far * 0.9, far, length(viewPos));
     color = mix(color, distFogColor, distFogFactor);
-
   }
 }
 

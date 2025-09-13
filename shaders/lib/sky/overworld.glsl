@@ -37,7 +37,7 @@ vec3 computeSkybox(vec3 viewDir) {
   float twilightAngleFactor = linearStep(twilightFarEdge, twilightNearEdge, dot(viewDir, twilightDir));
   float twilightMixFactor = twilightVisFactor * twilightAngleFactor;
 
-  const vec3 twilightBeginColor = vec3(0.976, 0.494, 0.447);
+  const vec3 twilightBeginColor = vec3(0.847, 0.294, 0.184);
   const vec3 twilightEndColor   = vec3(0.976, 0.870, 0.447);
   vec3 twilightColor =
     mix(twilightBeginColor, twilightEndColor, twilightFactor);

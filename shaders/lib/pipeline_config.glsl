@@ -38,7 +38,7 @@
 // 16:0  | unused (f16)
 /*
 const int colortex0Format = RGBA16F;
-const bool colortex0Clear = false;
+const vec4 colortex0ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
 */
 DECL_COLORTEX(rgba16f, 0)
 

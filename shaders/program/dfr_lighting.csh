@@ -4,6 +4,8 @@
 #include "/lib/common.glsl"
 #include "/lib/buffers.glsl"
 
+#include "/lib/sky/current_dim.glsl"
+
 #include "/lib/lighting/model.glsl"
 #include "/lib/lighting/shadow.glsl"
 #include "/lib/lighting/overworld.glsl"
@@ -11,23 +13,33 @@
 layout (local_size_x = 16, local_size_y = 16) in;
 const vec2 workGroupsRender = vec2(1.0, 1.0);
 
-void evalPixel(ivec2 pixelCoords, inout vec3 color) {
+vec3 evalPixel(ivec2 pixelCoords, vec4 color) {
   uvec4 fragInfoPacked = imageLoad(colorimg1, pixelCoords);
   FragInfo i = unpackFragInfo(fragInfoPacked);
+  
+  // evaluate
+  vec2 screenCoords = vec2(pixelCoords) / vec2(viewWidth, viewHeight);
+  float depth = texture(depthtex0, screenCoords).r;
 
-  if (!i.emissive) {
-    vec2 screenCoords = vec2(pixelCoords) / vec2(viewWidth, viewHeight);
-    float depth = texture(depthtex0, screenCoords).r;
+  // compute NDC; accounting for the hand being shifted during projection
+  vec3 ndcPos = fma(vec3(screenCoords, depth), vec3(2.0), vec3(-1.0));
+  if (i.hand) {
+    const float invHandDepth = 1.0 / MC_HAND_DEPTH;
+    ndcPos.z *= invHandDepth;
+  }
 
-    // compute NDC; accounting for the hand being shifted during projection
-    vec3 ndcPos = fma(vec3(screenCoords, depth), vec3(2.0), vec3(-1.0));
-    if (i.hand) {
-      const float invHandDepth = 1.0 / MC_HAND_DEPTH;
-      ndcPos.z *= invHandDepth;
-    }
+  // compute view position.
+  vec3 viewPos = txInvProj(gbufferProjectionInverse, ndcPos);
+  vec3 viewSpaceViewDir = normalize(viewPos);
 
-    // compute view and shadow view positions.
-    vec3 viewPos = txInvProj(gbufferProjectionInverse, ndcPos);
+  vec3 outColor = computeSkybox(viewSpaceViewDir);
+  outColor = pow(outColor, vec3(SRGB_GAMMA));
+
+  if (i.emissive) {
+    outColor = outColor * (1.0 - color.a) + color.rgb;
+  }
+  else {
+    // compute shadow view position.
     vec3 feetPos = txAffine(gbufferModelViewInverse, viewPos);
     vec3 shadowViewPos = txAffine(shadowModelView, feetPos);
 
@@ -42,8 +54,10 @@ void evalPixel(ivec2 pixelCoords, inout vec3 color) {
     vec3 ambientLight, skyLight;
     ltOverworld_skyColors(ambientLight, skyLight);
 
-    color = pbrLightingOpaque(color, i, viewDir, shadow, ambientLight, skyLight, blockLightColor);
+    outColor = pbrLightingOpaque(color.rgb, i, viewDir, shadow, ambientLight, skyLight, blockLightColor);
   }
+
+  return outColor;
 }
 
 void main() {
@@ -52,10 +66,10 @@ void main() {
     return;
   }
 
-  vec3 color = imageLoad(colorimg0, pixelCoords).rgb;
+  vec4 color = imageLoad(colorimg0, pixelCoords);
+  color.rgb = pow(color.rgb, vec3(SRGB_GAMMA));
 
-  color = pow(color, vec3(SRGB_GAMMA));
-  evalPixel(pixelCoords, color);
+  vec3 outColor = evalPixel(pixelCoords, color);
 
-  imageStore(colorimg0, pixelCoords, vec4(color, 1.0));
+  imageStore(colorimg0, pixelCoords, vec4(outColor, 1.0));
 }

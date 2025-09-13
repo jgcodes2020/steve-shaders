@@ -18,16 +18,17 @@ layout(location = 0) out vec4 bColor;
 
 void main() {
   bColor = texture(gtexture, v.uvTex) * v.color;
-  if (bColor.a < alphaTestRef) {
-    discard;
-  }
 
-  #ifdef TRANSLUCENT
-  // correct to linear premultiplied color
-  bColor.rgb *= bColor.a;
-  bColor.rgb = pow(bColor.rgb, vec3(SRGB_GAMMA));
-  #endif
+  vec2 ndcPos = fma(gl_FragCoord.xy, 2.0 / vec2(viewWidth, viewHeight), vec2(-1.0));
+	vec3 viewPos = txInvProj(gbufferProjectionInverse, vec3(ndcPos, 1.0));
+  vec3 viewDir = normalize(viewPos);
 
-  // brighten the colour to compensate for tonemapping
-  bColor.rgb *= 2.0;
+  float vDotU = dot(viewDir, gbufferModelView[1].xyz);
+  float brightnessFactor = fma(vDotU, 0.5, 0.5);
+
+  float vDotS = dot(viewDir, sunPosition * 0.01);
+  float maxBrightness = (vDotS > 0.0)? 5.0 : 3.0;
+
+  bColor.rgb *= mix(2.0, maxBrightness, brightnessFactor);
+  bColor.a = 0.0;
 }
