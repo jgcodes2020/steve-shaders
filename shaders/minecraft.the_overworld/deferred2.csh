@@ -1,1 +1,0 @@
-#include "/program/dfr_fog.csh"
